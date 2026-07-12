@@ -1,0 +1,1024 @@
+State,Year,WPR (%),UR (%)
+Andhra Pradesh,1993,51.5,1.4
+Andhra Pradesh,1994,51.38,1.42
+Andhra Pradesh,1995,51.26,1.44
+Andhra Pradesh,1996,51.15,1.45
+Andhra Pradesh,1997,51.03,1.47
+Andhra Pradesh,1998,50.91,1.49
+Andhra Pradesh,1999,50.79,1.51
+Andhra Pradesh,2000,50.67,1.53
+Andhra Pradesh,2001,50.55,1.55
+Andhra Pradesh,2002,50.44,1.56
+Andhra Pradesh,2003,50.32,1.58
+Andhra Pradesh,2004,50.2,1.6
+Andhra Pradesh,2005,50.01,1.69
+Andhra Pradesh,2006,49.83,1.77
+Andhra Pradesh,2007,49.64,1.86
+Andhra Pradesh,2008,49.46,1.94
+Andhra Pradesh,2009,49.27,2.03
+Andhra Pradesh,2010,49.09,2.11
+Andhra Pradesh,2011,48.9,2.2
+Andhra Pradesh,2012,49.35,2.37
+Andhra Pradesh,2013,49.79,2.55
+Andhra Pradesh,2014,50.24,2.72
+Andhra Pradesh,2015,50.68,2.89
+Andhra Pradesh,2016,51.13,3.06
+Andhra Pradesh,2017,51.57,3.24
+Andhra Pradesh,2018,52.02,3.41
+Andhra Pradesh,2019,52.46,3.58
+Andhra Pradesh,2020,52.91,3.75
+Andhra Pradesh,2021,53.35,3.93
+Andhra Pradesh,2022,53.8,4.1
+Andhra Pradesh,2023,53.8,4.1
+Arunachal Pradesh,1993,41.6,1.2
+Arunachal Pradesh,1994,41.32,1.31
+Arunachal Pradesh,1995,41.04,1.42
+Arunachal Pradesh,1996,40.75,1.53
+Arunachal Pradesh,1997,40.47,1.64
+Arunachal Pradesh,1998,40.19,1.75
+Arunachal Pradesh,1999,39.91,1.85
+Arunachal Pradesh,2000,39.63,1.96
+Arunachal Pradesh,2001,39.35,2.07
+Arunachal Pradesh,2002,39.06,2.18
+Arunachal Pradesh,2003,38.78,2.29
+Arunachal Pradesh,2004,38.5,2.4
+Arunachal Pradesh,2005,38.46,2.36
+Arunachal Pradesh,2006,38.41,2.31
+Arunachal Pradesh,2007,38.37,2.27
+Arunachal Pradesh,2008,38.33,2.23
+Arunachal Pradesh,2009,38.29,2.19
+Arunachal Pradesh,2010,38.24,2.14
+Arunachal Pradesh,2011,38.2,2.1
+Arunachal Pradesh,2012,38.65,2.35
+Arunachal Pradesh,2013,39.09,2.59
+Arunachal Pradesh,2014,39.54,2.84
+Arunachal Pradesh,2015,39.98,3.08
+Arunachal Pradesh,2016,40.43,3.33
+Arunachal Pradesh,2017,40.87,3.57
+Arunachal Pradesh,2018,41.32,3.82
+Arunachal Pradesh,2019,41.76,4.06
+Arunachal Pradesh,2020,42.21,4.31
+Arunachal Pradesh,2021,42.65,4.55
+Arunachal Pradesh,2022,43.1,4.8
+Arunachal Pradesh,2023,43.1,4.8
+Assam,1993,36.1,5.6
+Assam,1994,36.05,5.57
+Assam,1995,35.99,5.55
+Assam,1996,35.94,5.52
+Assam,1997,35.88,5.49
+Assam,1998,35.83,5.46
+Assam,1999,35.77,5.44
+Assam,2000,35.72,5.41
+Assam,2001,35.66,5.38
+Assam,2002,35.61,5.35
+Assam,2003,35.55,5.33
+Assam,2004,35.5,5.3
+Assam,2005,35.4,5.19
+Assam,2006,35.3,5.07
+Assam,2007,35.2,4.96
+Assam,2008,35.1,4.84
+Assam,2009,35.0,4.73
+Assam,2010,34.9,4.61
+Assam,2011,34.8,4.5
+Assam,2012,35.72,4.25
+Assam,2013,36.64,3.99
+Assam,2014,37.55,3.74
+Assam,2015,38.47,3.48
+Assam,2016,39.39,3.23
+Assam,2017,40.31,2.97
+Assam,2018,41.23,2.72
+Assam,2019,42.15,2.46
+Assam,2020,43.06,2.21
+Assam,2021,43.98,1.95
+Assam,2022,44.9,1.7
+Assam,2023,44.9,1.7
+Bihar,1993,33.1,1.4
+Bihar,1994,32.92,1.41
+Bihar,1995,32.74,1.42
+Bihar,1996,32.55,1.43
+Bihar,1997,32.37,1.44
+Bihar,1998,32.19,1.45
+Bihar,1999,32.01,1.45
+Bihar,2000,31.83,1.46
+Bihar,2001,31.65,1.47
+Bihar,2002,31.46,1.48
+Bihar,2003,31.28,1.49
+Bihar,2004,31.1,1.5
+Bihar,2005,30.67,1.74
+Bihar,2006,30.24,1.99
+Bihar,2007,29.81,2.23
+Bihar,2008,29.39,2.47
+Bihar,2009,28.96,2.71
+Bihar,2010,28.53,2.96
+Bihar,2011,28.1,3.2
+Bihar,2012,29.32,3.26
+Bihar,2013,30.54,3.33
+Bihar,2014,31.75,3.39
+Bihar,2015,32.97,3.45
+Bihar,2016,34.19,3.52
+Bihar,2017,35.41,3.58
+Bihar,2018,36.63,3.65
+Bihar,2019,37.85,3.71
+Bihar,2020,39.06,3.77
+Bihar,2021,40.28,3.84
+Bihar,2022,41.5,3.9
+Bihar,2023,41.5,3.9
+Chhattisgarh,2004,49.8,1.1
+Chhattisgarh,2005,50.0,1.11
+Chhattisgarh,2006,50.2,1.13
+Chhattisgarh,2007,50.4,1.14
+Chhattisgarh,2008,50.6,1.16
+Chhattisgarh,2009,50.8,1.17
+Chhattisgarh,2010,51.0,1.19
+Chhattisgarh,2011,51.2,1.2
+Chhattisgarh,2012,51.56,1.31
+Chhattisgarh,2013,51.93,1.42
+Chhattisgarh,2014,52.29,1.53
+Chhattisgarh,2015,52.65,1.64
+Chhattisgarh,2016,53.02,1.75
+Chhattisgarh,2017,53.38,1.85
+Chhattisgarh,2018,53.75,1.96
+Chhattisgarh,2019,54.11,2.07
+Chhattisgarh,2020,54.47,2.18
+Chhattisgarh,2021,54.84,2.29
+Chhattisgarh,2022,55.2,2.4
+Chhattisgarh,2023,55.2,2.4
+Goa,1993,34.5,6.8
+Goa,1994,34.65,6.68
+Goa,1995,34.79,6.56
+Goa,1996,34.94,6.45
+Goa,1997,35.08,6.33
+Goa,1998,35.23,6.21
+Goa,1999,35.37,6.09
+Goa,2000,35.52,5.97
+Goa,2001,35.66,5.85
+Goa,2002,35.81,5.74
+Goa,2003,35.95,5.62
+Goa,2004,36.1,5.5
+Goa,2005,35.99,5.44
+Goa,2006,35.87,5.39
+Goa,2007,35.76,5.33
+Goa,2008,35.64,5.27
+Goa,2009,35.53,5.21
+Goa,2010,35.41,5.16
+Goa,2011,35.3,5.1
+Goa,2012,35.77,5.52
+Goa,2013,36.25,5.94
+Goa,2014,36.72,6.35
+Goa,2015,37.19,6.77
+Goa,2016,37.66,7.19
+Goa,2017,38.14,7.61
+Goa,2018,38.61,8.03
+Goa,2019,39.08,8.45
+Goa,2020,39.55,8.86
+Goa,2021,40.03,9.28
+Goa,2022,40.5,9.7
+Goa,2023,40.5,9.7
+Gujarat,1993,46.4,1.3
+Gujarat,1994,46.2,1.29
+Gujarat,1995,46.0,1.28
+Gujarat,1996,45.8,1.27
+Gujarat,1997,45.6,1.26
+Gujarat,1998,45.4,1.25
+Gujarat,1999,45.2,1.25
+Gujarat,2000,45.0,1.24
+Gujarat,2001,44.8,1.23
+Gujarat,2002,44.6,1.22
+Gujarat,2003,44.4,1.21
+Gujarat,2004,44.2,1.2
+Gujarat,2005,44.04,1.1
+Gujarat,2006,43.89,1.0
+Gujarat,2007,43.73,0.9
+Gujarat,2008,43.57,0.8
+Gujarat,2009,43.41,0.7
+Gujarat,2010,43.26,0.6
+Gujarat,2011,43.1,0.5
+Gujarat,2012,43.56,0.61
+Gujarat,2013,44.03,0.72
+Gujarat,2014,44.49,0.83
+Gujarat,2015,44.95,0.94
+Gujarat,2016,45.42,1.05
+Gujarat,2017,45.88,1.15
+Gujarat,2018,46.35,1.26
+Gujarat,2019,46.81,1.37
+Gujarat,2020,47.27,1.48
+Gujarat,2021,47.74,1.59
+Gujarat,2022,48.2,1.7
+Gujarat,2023,48.2,1.7
+Haryana,1993,33.4,1.9
+Haryana,1994,33.44,1.95
+Haryana,1995,33.47,1.99
+Haryana,1996,33.51,2.04
+Haryana,1997,33.55,2.08
+Haryana,1998,33.58,2.13
+Haryana,1999,33.62,2.17
+Haryana,2000,33.65,2.22
+Haryana,2001,33.69,2.26
+Haryana,2002,33.73,2.31
+Haryana,2003,33.76,2.35
+Haryana,2004,33.8,2.4
+Haryana,2005,33.71,2.46
+Haryana,2006,33.63,2.51
+Haryana,2007,33.54,2.57
+Haryana,2008,33.46,2.63
+Haryana,2009,33.37,2.69
+Haryana,2010,33.29,2.74
+Haryana,2011,33.2,2.8
+Haryana,2012,33.99,3.1
+Haryana,2013,34.78,3.4
+Haryana,2014,35.57,3.7
+Haryana,2015,36.36,4.0
+Haryana,2016,37.15,4.3
+Haryana,2017,37.95,4.6
+Haryana,2018,38.74,4.9
+Haryana,2019,39.53,5.2
+Haryana,2020,40.32,5.5
+Haryana,2021,41.11,5.8
+Haryana,2022,41.9,6.1
+Haryana,2023,41.9,6.1
+Himachal Pradesh,1993,48.2,1.8
+Himachal Pradesh,1994,48.5,1.83
+Himachal Pradesh,1995,48.8,1.85
+Himachal Pradesh,1996,49.1,1.88
+Himachal Pradesh,1997,49.4,1.91
+Himachal Pradesh,1998,49.7,1.94
+Himachal Pradesh,1999,50.0,1.96
+Himachal Pradesh,2000,50.3,1.99
+Himachal Pradesh,2001,50.6,2.02
+Himachal Pradesh,2002,50.9,2.05
+Himachal Pradesh,2003,51.2,2.07
+Himachal Pradesh,2004,51.5,2.1
+Himachal Pradesh,2005,51.63,2.06
+Himachal Pradesh,2006,51.76,2.01
+Himachal Pradesh,2007,51.89,1.97
+Himachal Pradesh,2008,52.01,1.93
+Himachal Pradesh,2009,52.14,1.89
+Himachal Pradesh,2010,52.27,1.84
+Himachal Pradesh,2011,52.4,1.8
+Himachal Pradesh,2012,52.97,2.03
+Himachal Pradesh,2013,53.55,2.25
+Himachal Pradesh,2014,54.12,2.48
+Himachal Pradesh,2015,54.69,2.71
+Himachal Pradesh,2016,55.26,2.94
+Himachal Pradesh,2017,55.84,3.16
+Himachal Pradesh,2018,56.41,3.39
+Himachal Pradesh,2019,56.98,3.62
+Himachal Pradesh,2020,57.55,3.85
+Himachal Pradesh,2021,58.13,4.07
+Himachal Pradesh,2022,58.7,4.3
+Himachal Pradesh,2023,58.7,4.3
+Jammu & Kashmir,1993,35.9,2.1
+Jammu & Kashmir,1994,35.95,2.2
+Jammu & Kashmir,1995,36.01,2.3
+Jammu & Kashmir,1996,36.06,2.4
+Jammu & Kashmir,1997,36.12,2.5
+Jammu & Kashmir,1998,36.17,2.6
+Jammu & Kashmir,1999,36.23,2.7
+Jammu & Kashmir,2000,36.28,2.8
+Jammu & Kashmir,2001,36.34,2.9
+Jammu & Kashmir,2002,36.39,3.0
+Jammu & Kashmir,2003,36.45,3.1
+Jammu & Kashmir,2004,36.5,3.2
+Jammu & Kashmir,2005,36.16,3.44
+Jammu & Kashmir,2006,35.81,3.69
+Jammu & Kashmir,2007,35.47,3.93
+Jammu & Kashmir,2008,35.13,4.17
+Jammu & Kashmir,2009,34.79,4.41
+Jammu & Kashmir,2010,34.44,4.66
+Jammu & Kashmir,2011,34.1,4.9
+Jammu & Kashmir,2012,35.28,4.85
+Jammu & Kashmir,2013,36.46,4.81
+Jammu & Kashmir,2014,37.65,4.76
+Jammu & Kashmir,2015,38.83,4.72
+Jammu & Kashmir,2016,40.01,4.67
+Jammu & Kashmir,2017,41.19,4.63
+Jammu & Kashmir,2018,42.37,4.58
+Jammu & Kashmir,2019,43.55,4.54
+Jammu & Kashmir,2020,44.74,4.49
+Jammu & Kashmir,2021,45.92,4.45
+Jammu & Kashmir,2022,47.1,4.4
+Jammu & Kashmir,2023,47.1,4.4
+Jharkhand,2004,36.2,2.3
+Jharkhand,2005,35.96,2.41
+Jharkhand,2006,35.71,2.53
+Jharkhand,2007,35.47,2.64
+Jharkhand,2008,35.23,2.76
+Jharkhand,2009,34.99,2.87
+Jharkhand,2010,34.74,2.99
+Jharkhand,2011,34.5,3.1
+Jharkhand,2012,35.55,2.97
+Jharkhand,2013,36.61,2.85
+Jharkhand,2014,37.66,2.72
+Jharkhand,2015,38.72,2.59
+Jharkhand,2016,39.77,2.46
+Jharkhand,2017,40.83,2.34
+Jharkhand,2018,41.88,2.21
+Jharkhand,2019,42.94,2.08
+Jharkhand,2020,43.99,1.95
+Jharkhand,2021,45.05,1.83
+Jharkhand,2022,46.1,1.7
+Jharkhand,2023,46.1,1.7
+Karnataka,1993,46.9,0.9
+Karnataka,1994,46.83,0.92
+Karnataka,1995,46.75,0.94
+Karnataka,1996,46.68,0.95
+Karnataka,1997,46.61,0.97
+Karnataka,1998,46.54,0.99
+Karnataka,1999,46.46,1.01
+Karnataka,2000,46.39,1.03
+Karnataka,2001,46.32,1.05
+Karnataka,2002,46.25,1.06
+Karnataka,2003,46.17,1.08
+Karnataka,2004,46.1,1.1
+Karnataka,2005,46.03,1.11
+Karnataka,2006,45.96,1.13
+Karnataka,2007,45.89,1.14
+Karnataka,2008,45.81,1.16
+Karnataka,2009,45.74,1.17
+Karnataka,2010,45.67,1.19
+Karnataka,2011,45.6,1.2
+Karnataka,2012,46.51,1.31
+Karnataka,2013,47.42,1.42
+Karnataka,2014,48.33,1.53
+Karnataka,2015,49.24,1.64
+Karnataka,2016,50.15,1.75
+Karnataka,2017,51.05,1.85
+Karnataka,2018,51.96,1.96
+Karnataka,2019,52.87,2.07
+Karnataka,2020,53.78,2.18
+Karnataka,2021,54.69,2.29
+Karnataka,2022,55.6,2.4
+Karnataka,2023,55.6,2.4
+Kerala,1993,35.2,9.2
+Kerala,1994,35.31,9.22
+Kerala,1995,35.42,9.24
+Kerala,1996,35.53,9.25
+Kerala,1997,35.64,9.27
+Kerala,1998,35.75,9.29
+Kerala,1999,35.85,9.31
+Kerala,2000,35.96,9.33
+Kerala,2001,36.07,9.35
+Kerala,2002,36.18,9.36
+Kerala,2003,36.29,9.38
+Kerala,2004,36.4,9.4
+Kerala,2005,36.37,9.03
+Kerala,2006,36.34,8.66
+Kerala,2007,36.31,8.29
+Kerala,2008,36.29,7.91
+Kerala,2009,36.26,7.54
+Kerala,2010,36.23,7.17
+Kerala,2011,36.2,6.8
+Kerala,2012,36.98,6.82
+Kerala,2013,37.76,6.84
+Kerala,2014,38.55,6.85
+Kerala,2015,39.33,6.87
+Kerala,2016,40.11,6.89
+Kerala,2017,40.89,6.91
+Kerala,2018,41.67,6.93
+Kerala,2019,42.45,6.95
+Kerala,2020,43.24,6.96
+Kerala,2021,44.02,6.98
+Kerala,2022,44.8,7.0
+Kerala,2023,44.8,7.0
+Madhya Pradesh,1993,46.2,0.8
+Madhya Pradesh,1994,45.92,0.85
+Madhya Pradesh,1995,45.64,0.89
+Madhya Pradesh,1996,45.35,0.94
+Madhya Pradesh,1997,45.07,0.98
+Madhya Pradesh,1998,44.79,1.03
+Madhya Pradesh,1999,44.51,1.07
+Madhya Pradesh,2000,44.23,1.12
+Madhya Pradesh,2001,43.95,1.16
+Madhya Pradesh,2002,43.66,1.21
+Madhya Pradesh,2003,43.38,1.25
+Madhya Pradesh,2004,43.1,1.3
+Madhya Pradesh,2005,42.96,1.24
+Madhya Pradesh,2006,42.81,1.19
+Madhya Pradesh,2007,42.67,1.13
+Madhya Pradesh,2008,42.53,1.07
+Madhya Pradesh,2009,42.39,1.01
+Madhya Pradesh,2010,42.24,0.96
+Madhya Pradesh,2011,42.1,0.9
+Madhya Pradesh,2012,43.05,0.96
+Madhya Pradesh,2013,44.01,1.03
+Madhya Pradesh,2014,44.96,1.09
+Madhya Pradesh,2015,45.92,1.15
+Madhya Pradesh,2016,46.87,1.22
+Madhya Pradesh,2017,47.83,1.28
+Madhya Pradesh,2018,48.78,1.35
+Madhya Pradesh,2019,49.74,1.41
+Madhya Pradesh,2020,50.69,1.47
+Madhya Pradesh,2021,51.65,1.54
+Madhya Pradesh,2022,52.6,1.6
+Madhya Pradesh,2023,52.6,1.6
+Maharashtra,1993,46.8,1.2
+Maharashtra,1994,46.77,1.24
+Maharashtra,1995,46.75,1.27
+Maharashtra,1996,46.72,1.31
+Maharashtra,1997,46.69,1.35
+Maharashtra,1998,46.66,1.38
+Maharashtra,1999,46.64,1.42
+Maharashtra,2000,46.61,1.45
+Maharashtra,2001,46.58,1.49
+Maharashtra,2002,46.55,1.53
+Maharashtra,2003,46.53,1.56
+Maharashtra,2004,46.5,1.6
+Maharashtra,2005,46.17,1.51
+Maharashtra,2006,45.84,1.43
+Maharashtra,2007,45.51,1.34
+Maharashtra,2008,45.19,1.26
+Maharashtra,2009,44.86,1.17
+Maharashtra,2010,44.53,1.09
+Maharashtra,2011,44.2,1.0
+Maharashtra,2012,44.9,1.19
+Maharashtra,2013,45.6,1.38
+Maharashtra,2014,46.3,1.57
+Maharashtra,2015,47.0,1.76
+Maharashtra,2016,47.7,1.95
+Maharashtra,2017,48.4,2.15
+Maharashtra,2018,49.1,2.34
+Maharashtra,2019,49.8,2.53
+Maharashtra,2020,50.5,2.72
+Maharashtra,2021,51.2,2.91
+Maharashtra,2022,51.9,3.1
+Maharashtra,2023,51.9,3.1
+Manipur,1993,39.2,1.9
+Manipur,1994,39.1,1.93
+Manipur,1995,39.0,1.95
+Manipur,1996,38.9,1.98
+Manipur,1997,38.8,2.01
+Manipur,1998,38.7,2.04
+Manipur,1999,38.6,2.06
+Manipur,2000,38.5,2.09
+Manipur,2001,38.4,2.12
+Manipur,2002,38.3,2.15
+Manipur,2003,38.2,2.17
+Manipur,2004,38.1,2.2
+Manipur,2005,38.0,2.4
+Manipur,2006,37.9,2.6
+Manipur,2007,37.8,2.8
+Manipur,2008,37.7,3.0
+Manipur,2009,37.6,3.2
+Manipur,2010,37.5,3.4
+Manipur,2011,37.4,3.6
+Manipur,2012,38.38,3.7
+Manipur,2013,39.36,3.8
+Manipur,2014,40.35,3.9
+Manipur,2015,41.33,4.0
+Manipur,2016,42.31,4.1
+Manipur,2017,43.29,4.2
+Manipur,2018,44.27,4.3
+Manipur,2019,45.25,4.4
+Manipur,2020,46.24,4.5
+Manipur,2021,47.22,4.6
+Manipur,2022,48.2,4.7
+Manipur,2023,48.2,4.7
+Meghalaya,1993,47.1,0.4
+Meghalaya,1994,46.95,0.43
+Meghalaya,1995,46.81,0.45
+Meghalaya,1996,46.66,0.48
+Meghalaya,1997,46.52,0.51
+Meghalaya,1998,46.37,0.54
+Meghalaya,1999,46.23,0.56
+Meghalaya,2000,46.08,0.59
+Meghalaya,2001,45.94,0.62
+Meghalaya,2002,45.79,0.65
+Meghalaya,2003,45.65,0.67
+Meghalaya,2004,45.5,0.7
+Meghalaya,2005,45.6,0.66
+Meghalaya,2006,45.7,0.61
+Meghalaya,2007,45.8,0.57
+Meghalaya,2008,45.9,0.53
+Meghalaya,2009,46.0,0.49
+Meghalaya,2010,46.1,0.44
+Meghalaya,2011,46.2,0.4
+Meghalaya,2012,46.92,0.91
+Meghalaya,2013,47.64,1.42
+Meghalaya,2014,48.35,1.93
+Meghalaya,2015,49.07,2.44
+Meghalaya,2016,49.79,2.95
+Meghalaya,2017,50.51,3.45
+Meghalaya,2018,51.23,3.96
+Meghalaya,2019,51.95,4.47
+Meghalaya,2020,52.66,4.98
+Meghalaya,2021,53.38,5.49
+Meghalaya,2022,54.1,6.0
+Meghalaya,2023,54.1,6.0
+Mizoram,1993,48.3,0.9
+Mizoram,1994,48.17,0.9
+Mizoram,1995,48.05,0.9
+Mizoram,1996,47.92,0.9
+Mizoram,1997,47.79,0.9
+Mizoram,1998,47.66,0.9
+Mizoram,1999,47.54,0.9
+Mizoram,2000,47.41,0.9
+Mizoram,2001,47.28,0.9
+Mizoram,2002,47.15,0.9
+Mizoram,2003,47.03,0.9
+Mizoram,2004,46.9,0.9
+Mizoram,2005,46.7,1.1
+Mizoram,2006,46.5,1.3
+Mizoram,2007,46.3,1.5
+Mizoram,2008,46.1,1.7
+Mizoram,2009,45.9,1.9
+Mizoram,2010,45.7,2.1
+Mizoram,2011,45.5,2.3
+Mizoram,2012,46.52,2.29
+Mizoram,2013,47.54,2.28
+Mizoram,2014,48.55,2.27
+Mizoram,2015,49.57,2.26
+Mizoram,2016,50.59,2.25
+Mizoram,2017,51.61,2.25
+Mizoram,2018,52.63,2.24
+Mizoram,2019,53.65,2.23
+Mizoram,2020,54.66,2.22
+Mizoram,2021,55.68,2.21
+Mizoram,2022,56.7,2.2
+Mizoram,2023,56.7,2.2
+Nagaland,1993,45.1,1.7
+Nagaland,1994,44.93,1.8
+Nagaland,1995,44.75,1.9
+Nagaland,1996,44.58,2.0
+Nagaland,1997,44.41,2.1
+Nagaland,1998,44.24,2.2
+Nagaland,1999,44.06,2.3
+Nagaland,2000,43.89,2.4
+Nagaland,2001,43.72,2.5
+Nagaland,2002,43.55,2.6
+Nagaland,2003,43.37,2.7
+Nagaland,2004,43.2,2.8
+Nagaland,2005,43.14,3.4
+Nagaland,2006,43.09,4.0
+Nagaland,2007,43.03,4.6
+Nagaland,2008,42.97,5.2
+Nagaland,2009,42.91,5.8
+Nagaland,2010,42.86,6.4
+Nagaland,2011,42.8,7.0
+Nagaland,2012,43.47,6.75
+Nagaland,2013,44.15,6.51
+Nagaland,2014,44.82,6.26
+Nagaland,2015,45.49,6.02
+Nagaland,2016,46.16,5.77
+Nagaland,2017,46.84,5.53
+Nagaland,2018,47.51,5.28
+Nagaland,2019,48.18,5.04
+Nagaland,2020,48.85,4.79
+Nagaland,2021,49.53,4.55
+Nagaland,2022,50.2,4.3
+Nagaland,2023,50.2,4.3
+Odisha,1993,41.6,1.8
+Odisha,1994,41.56,1.83
+Odisha,1995,41.53,1.85
+Odisha,1996,41.49,1.88
+Odisha,1997,41.45,1.91
+Odisha,1998,41.42,1.94
+Odisha,1999,41.38,1.96
+Odisha,2000,41.35,1.99
+Odisha,2001,41.31,2.02
+Odisha,2002,41.27,2.05
+Odisha,2003,41.24,2.07
+Odisha,2004,41.2,2.1
+Odisha,2005,41.04,2.11
+Odisha,2006,40.89,2.13
+Odisha,2007,40.73,2.14
+Odisha,2008,40.57,2.16
+Odisha,2009,40.41,2.17
+Odisha,2010,40.26,2.19
+Odisha,2011,40.1,2.2
+Odisha,2012,41.17,2.35
+Odisha,2013,42.25,2.51
+Odisha,2014,43.32,2.66
+Odisha,2015,44.39,2.82
+Odisha,2016,45.46,2.97
+Odisha,2017,46.54,3.13
+Odisha,2018,47.61,3.28
+Odisha,2019,48.68,3.44
+Odisha,2020,49.75,3.59
+Odisha,2021,50.83,3.75
+Odisha,2022,51.9,3.9
+Odisha,2023,51.9,3.9
+Punjab,1993,36.2,1.7
+Punjab,1994,36.28,1.75
+Punjab,1995,36.36,1.81
+Punjab,1996,36.45,1.86
+Punjab,1997,36.53,1.92
+Punjab,1998,36.61,1.97
+Punjab,1999,36.69,2.03
+Punjab,2000,36.77,2.08
+Punjab,2001,36.85,2.14
+Punjab,2002,36.94,2.19
+Punjab,2003,37.02,2.25
+Punjab,2004,37.1,2.3
+Punjab,2005,37.01,2.33
+Punjab,2006,36.93,2.36
+Punjab,2007,36.84,2.39
+Punjab,2008,36.76,2.41
+Punjab,2009,36.67,2.44
+Punjab,2010,36.59,2.47
+Punjab,2011,36.5,2.5
+Punjab,2012,37.15,2.83
+Punjab,2013,37.79,3.15
+Punjab,2014,38.44,3.48
+Punjab,2015,39.08,3.81
+Punjab,2016,39.73,4.14
+Punjab,2017,40.37,4.46
+Punjab,2018,41.02,4.79
+Punjab,2019,41.66,5.12
+Punjab,2020,42.31,5.45
+Punjab,2021,42.95,5.77
+Punjab,2022,43.6,6.1
+Punjab,2023,43.6,6.1
+Rajasthan,1993,42.1,0.7
+Rajasthan,1994,42.17,0.74
+Rajasthan,1995,42.25,0.77
+Rajasthan,1996,42.32,0.81
+Rajasthan,1997,42.39,0.85
+Rajasthan,1998,42.46,0.88
+Rajasthan,1999,42.54,0.92
+Rajasthan,2000,42.61,0.95
+Rajasthan,2001,42.68,0.99
+Rajasthan,2002,42.75,1.03
+Rajasthan,2003,42.83,1.06
+Rajasthan,2004,42.9,1.1
+Rajasthan,2005,42.67,1.11
+Rajasthan,2006,42.44,1.13
+Rajasthan,2007,42.21,1.14
+Rajasthan,2008,41.99,1.16
+Rajasthan,2009,41.76,1.17
+Rajasthan,2010,41.53,1.19
+Rajasthan,2011,41.3,1.2
+Rajasthan,2012,42.17,1.49
+Rajasthan,2013,43.05,1.78
+Rajasthan,2014,43.92,2.07
+Rajasthan,2015,44.79,2.36
+Rajasthan,2016,45.66,2.65
+Rajasthan,2017,46.54,2.95
+Rajasthan,2018,47.41,3.24
+Rajasthan,2019,48.28,3.53
+Rajasthan,2020,49.15,3.82
+Rajasthan,2021,50.03,4.11
+Rajasthan,2022,50.9,4.4
+Rajasthan,2023,50.9,4.4
+Sikkim,1993,42.8,1.5
+Sikkim,1994,42.72,1.56
+Sikkim,1995,42.64,1.63
+Sikkim,1996,42.55,1.69
+Sikkim,1997,42.47,1.75
+Sikkim,1998,42.39,1.82
+Sikkim,1999,42.31,1.88
+Sikkim,2000,42.23,1.95
+Sikkim,2001,42.15,2.01
+Sikkim,2002,42.06,2.07
+Sikkim,2003,41.98,2.14
+Sikkim,2004,41.9,2.2
+Sikkim,2005,42.13,2.04
+Sikkim,2006,42.36,1.89
+Sikkim,2007,42.59,1.73
+Sikkim,2008,42.81,1.57
+Sikkim,2009,43.04,1.41
+Sikkim,2010,43.27,1.26
+Sikkim,2011,43.5,1.1
+Sikkim,2012,44.28,1.2
+Sikkim,2013,45.06,1.3
+Sikkim,2014,45.85,1.4
+Sikkim,2015,46.63,1.5
+Sikkim,2016,47.41,1.6
+Sikkim,2017,48.19,1.7
+Sikkim,2018,48.97,1.8
+Sikkim,2019,49.75,1.9
+Sikkim,2020,50.54,2.0
+Sikkim,2021,51.32,2.1
+Sikkim,2022,52.1,2.2
+Sikkim,2023,52.1,2.2
+Tamil Nadu,1993,48.1,2.1
+Tamil Nadu,1994,47.94,2.07
+Tamil Nadu,1995,47.77,2.05
+Tamil Nadu,1996,47.61,2.02
+Tamil Nadu,1997,47.45,1.99
+Tamil Nadu,1998,47.28,1.96
+Tamil Nadu,1999,47.12,1.94
+Tamil Nadu,2000,46.95,1.91
+Tamil Nadu,2001,46.79,1.88
+Tamil Nadu,2002,46.63,1.85
+Tamil Nadu,2003,46.46,1.83
+Tamil Nadu,2004,46.3,1.8
+Tamil Nadu,2005,46.09,1.84
+Tamil Nadu,2006,45.87,1.89
+Tamil Nadu,2007,45.66,1.93
+Tamil Nadu,2008,45.44,1.97
+Tamil Nadu,2009,45.23,2.01
+Tamil Nadu,2010,45.01,2.06
+Tamil Nadu,2011,44.8,2.1
+Tamil Nadu,2012,45.49,2.3
+Tamil Nadu,2013,46.18,2.5
+Tamil Nadu,2014,46.87,2.7
+Tamil Nadu,2015,47.56,2.9
+Tamil Nadu,2016,48.25,3.1
+Tamil Nadu,2017,48.95,3.3
+Tamil Nadu,2018,49.64,3.5
+Tamil Nadu,2019,50.33,3.7
+Tamil Nadu,2020,51.02,3.9
+Tamil Nadu,2021,51.71,4.1
+Tamil Nadu,2022,52.4,4.3
+Tamil Nadu,2023,52.4,4.3
+Telangana,2022,52.1,4.4
+Telangana,2023,52.1,4.4
+Tripura,1993,36.2,5.4
+Tripura,1994,36.1,5.56
+Tripura,1995,36.0,5.73
+Tripura,1996,35.9,5.89
+Tripura,1997,35.8,6.05
+Tripura,1998,35.7,6.22
+Tripura,1999,35.6,6.38
+Tripura,2000,35.5,6.55
+Tripura,2001,35.4,6.71
+Tripura,2002,35.3,6.87
+Tripura,2003,35.2,7.04
+Tripura,2004,35.1,7.2
+Tripura,2005,35.44,8.21
+Tripura,2006,35.79,9.23
+Tripura,2007,36.13,10.24
+Tripura,2008,36.47,11.26
+Tripura,2009,36.81,12.27
+Tripura,2010,37.16,13.29
+Tripura,2011,37.5,14.3
+Tripura,2012,38.62,13.13
+Tripura,2013,39.74,11.95
+Tripura,2014,40.85,10.78
+Tripura,2015,41.97,9.61
+Tripura,2016,43.09,8.44
+Tripura,2017,44.21,7.26
+Tripura,2018,45.33,6.09
+Tripura,2019,46.45,4.92
+Tripura,2020,47.56,3.75
+Tripura,2021,48.68,2.57
+Tripura,2022,49.8,1.4
+Tripura,2023,49.8,1.4
+Uttar Pradesh,1993,35.2,1.1
+Uttar Pradesh,1994,35.1,1.13
+Uttar Pradesh,1995,35.0,1.15
+Uttar Pradesh,1996,34.9,1.18
+Uttar Pradesh,1997,34.8,1.21
+Uttar Pradesh,1998,34.7,1.24
+Uttar Pradesh,1999,34.6,1.26
+Uttar Pradesh,2000,34.5,1.29
+Uttar Pradesh,2001,34.4,1.32
+Uttar Pradesh,2002,34.3,1.35
+Uttar Pradesh,2003,34.2,1.37
+Uttar Pradesh,2004,34.1,1.4
+Uttar Pradesh,2005,33.93,1.39
+Uttar Pradesh,2006,33.76,1.37
+Uttar Pradesh,2007,33.59,1.36
+Uttar Pradesh,2008,33.41,1.34
+Uttar Pradesh,2009,33.24,1.33
+Uttar Pradesh,2010,33.07,1.31
+Uttar Pradesh,2011,32.9,1.3
+Uttar Pradesh,2012,33.93,1.4
+Uttar Pradesh,2013,34.95,1.5
+Uttar Pradesh,2014,35.98,1.6
+Uttar Pradesh,2015,37.01,1.7
+Uttar Pradesh,2016,38.04,1.8
+Uttar Pradesh,2017,39.06,1.9
+Uttar Pradesh,2018,40.09,2.0
+Uttar Pradesh,2019,41.12,2.1
+Uttar Pradesh,2020,42.15,2.2
+Uttar Pradesh,2021,43.17,2.3
+Uttar Pradesh,2022,44.2,2.4
+Uttar Pradesh,2023,44.2,2.4
+Uttarakhand,2004,36.5,2.1
+Uttarakhand,2005,36.3,2.16
+Uttarakhand,2006,36.1,2.21
+Uttarakhand,2007,35.9,2.27
+Uttarakhand,2008,35.7,2.33
+Uttarakhand,2009,35.5,2.39
+Uttarakhand,2010,35.3,2.44
+Uttarakhand,2011,35.1,2.5
+Uttarakhand,2012,35.89,2.68
+Uttarakhand,2013,36.68,2.86
+Uttarakhand,2014,37.47,3.05
+Uttarakhand,2015,38.26,3.23
+Uttarakhand,2016,39.05,3.41
+Uttarakhand,2017,39.85,3.59
+Uttarakhand,2018,40.64,3.77
+Uttarakhand,2019,41.43,3.95
+Uttarakhand,2020,42.22,4.14
+Uttarakhand,2021,43.01,4.32
+Uttarakhand,2022,43.8,4.5
+Uttarakhand,2023,43.8,4.5
+West Bengal,1993,37.4,4.5
+West Bengal,1994,37.47,4.48
+West Bengal,1995,37.55,4.46
+West Bengal,1996,37.62,4.45
+West Bengal,1997,37.69,4.43
+West Bengal,1998,37.76,4.41
+West Bengal,1999,37.84,4.39
+West Bengal,2000,37.91,4.37
+West Bengal,2001,37.98,4.35
+West Bengal,2002,38.05,4.34
+West Bengal,2003,38.13,4.32
+West Bengal,2004,38.2,4.3
+West Bengal,2005,38.19,4.14
+West Bengal,2006,38.17,3.99
+West Bengal,2007,38.16,3.83
+West Bengal,2008,38.14,3.67
+West Bengal,2009,38.13,3.51
+West Bengal,2010,38.11,3.36
+West Bengal,2011,38.1,3.2
+West Bengal,2012,39.01,3.11
+West Bengal,2013,39.92,3.02
+West Bengal,2014,40.83,2.93
+West Bengal,2015,41.74,2.84
+West Bengal,2016,42.65,2.75
+West Bengal,2017,43.55,2.65
+West Bengal,2018,44.46,2.56
+West Bengal,2019,45.37,2.47
+West Bengal,2020,46.28,2.38
+West Bengal,2021,47.19,2.29
+West Bengal,2022,48.1,2.2
+West Bengal,2023,48.1,2.2
+Andaman & Nicobar,1993,36.1,4.2
+Andaman & Nicobar,1994,36.02,4.25
+Andaman & Nicobar,1995,35.94,4.31
+Andaman & Nicobar,1996,35.85,4.36
+Andaman & Nicobar,1997,35.77,4.42
+Andaman & Nicobar,1998,35.69,4.47
+Andaman & Nicobar,1999,35.61,4.53
+Andaman & Nicobar,2000,35.53,4.58
+Andaman & Nicobar,2001,35.45,4.64
+Andaman & Nicobar,2002,35.36,4.69
+Andaman & Nicobar,2003,35.28,4.75
+Andaman & Nicobar,2004,35.2,4.8
+Andaman & Nicobar,2005,35.11,4.81
+Andaman & Nicobar,2006,35.03,4.83
+Andaman & Nicobar,2007,34.94,4.84
+Andaman & Nicobar,2008,34.86,4.86
+Andaman & Nicobar,2009,34.77,4.87
+Andaman & Nicobar,2010,34.69,4.89
+Andaman & Nicobar,2011,34.6,4.9
+Andaman & Nicobar,2012,35.56,5.34
+Andaman & Nicobar,2013,36.53,5.77
+Andaman & Nicobar,2014,37.49,6.21
+Andaman & Nicobar,2015,38.45,6.65
+Andaman & Nicobar,2016,39.42,7.08
+Andaman & Nicobar,2017,40.38,7.52
+Andaman & Nicobar,2018,41.35,7.95
+Andaman & Nicobar,2019,42.31,8.39
+Andaman & Nicobar,2020,43.27,8.83
+Andaman & Nicobar,2021,44.24,9.26
+Andaman & Nicobar,2022,45.2,9.7
+Andaman & Nicobar,2023,45.2,9.7
+Chandigarh,1993,35.4,4.4
+Chandigarh,1994,35.55,4.46
+Chandigarh,1995,35.71,4.53
+Chandigarh,1996,35.86,4.59
+Chandigarh,1997,36.02,4.65
+Chandigarh,1998,36.17,4.72
+Chandigarh,1999,36.33,4.78
+Chandigarh,2000,36.48,4.85
+Chandigarh,2001,36.64,4.91
+Chandigarh,2002,36.79,4.97
+Chandigarh,2003,36.95,5.04
+Chandigarh,2004,37.1,5.1
+Chandigarh,2005,36.97,4.97
+Chandigarh,2006,36.84,4.84
+Chandigarh,2007,36.71,4.71
+Chandigarh,2008,36.59,4.59
+Chandigarh,2009,36.46,4.46
+Chandigarh,2010,36.33,4.33
+Chandigarh,2011,36.2,4.2
+Chandigarh,2012,36.75,4.18
+Chandigarh,2013,37.31,4.16
+Chandigarh,2014,37.86,4.15
+Chandigarh,2015,38.42,4.13
+Chandigarh,2016,38.97,4.11
+Chandigarh,2017,39.53,4.09
+Chandigarh,2018,40.08,4.07
+Chandigarh,2019,40.64,4.05
+Chandigarh,2020,41.19,4.04
+Chandigarh,2021,41.75,4.02
+Chandigarh,2022,42.3,4.0
+Chandigarh,2023,42.3,4.0
+Dadra & Nagar Haveli,1993,42.1,1.1
+Dadra & Nagar Haveli,1994,42.05,1.13
+Dadra & Nagar Haveli,1995,41.99,1.15
+Dadra & Nagar Haveli,1996,41.94,1.18
+Dadra & Nagar Haveli,1997,41.88,1.21
+Dadra & Nagar Haveli,1998,41.83,1.24
+Dadra & Nagar Haveli,1999,41.77,1.26
+Dadra & Nagar Haveli,2000,41.72,1.29
+Dadra & Nagar Haveli,2001,41.66,1.32
+Dadra & Nagar Haveli,2002,41.61,1.35
+Dadra & Nagar Haveli,2003,41.55,1.37
+Dadra & Nagar Haveli,2004,41.5,1.4
+Dadra & Nagar Haveli,2005,41.74,1.33
+Dadra & Nagar Haveli,2006,41.99,1.26
+Dadra & Nagar Haveli,2007,42.23,1.19
+Dadra & Nagar Haveli,2008,42.47,1.11
+Dadra & Nagar Haveli,2009,42.71,1.04
+Dadra & Nagar Haveli,2010,42.96,0.97
+Dadra & Nagar Haveli,2011,43.2,0.9
+Dadra & Nagar Haveli,2012,43.92,1.05
+Dadra & Nagar Haveli,2013,44.64,1.19
+Dadra & Nagar Haveli,2014,45.35,1.34
+Dadra & Nagar Haveli,2015,46.07,1.48
+Dadra & Nagar Haveli,2016,46.79,1.63
+Dadra & Nagar Haveli,2017,47.51,1.77
+Dadra & Nagar Haveli,2018,48.23,1.92
+Dadra & Nagar Haveli,2019,48.95,2.06
+Dadra & Nagar Haveli,2020,49.66,2.21
+Dadra & Nagar Haveli,2021,50.38,2.35
+Dadra & Nagar Haveli,2022,51.1,2.5
+Dadra & Nagar Haveli,2023,51.1,2.5
+Delhi,1993,31.2,4.1
+Delhi,1994,31.31,4.14
+Delhi,1995,31.42,4.17
+Delhi,1996,31.53,4.21
+Delhi,1997,31.64,4.25
+Delhi,1998,31.75,4.28
+Delhi,1999,31.85,4.32
+Delhi,2000,31.96,4.35
+Delhi,2001,32.07,4.39
+Delhi,2002,32.18,4.43
+Delhi,2003,32.29,4.46
+Delhi,2004,32.4,4.5
+Delhi,2005,32.29,4.4
+Delhi,2006,32.17,4.3
+Delhi,2007,32.06,4.2
+Delhi,2008,31.94,4.1
+Delhi,2009,31.83,4.0
+Delhi,2010,31.71,3.9
+Delhi,2011,31.6,3.8
+Delhi,2012,32.33,3.63
+Delhi,2013,33.05,3.45
+Delhi,2014,33.78,3.28
+Delhi,2015,34.51,3.11
+Delhi,2016,35.24,2.94
+Delhi,2017,35.96,2.76
+Delhi,2018,36.69,2.59
+Delhi,2019,37.42,2.42
+Delhi,2020,38.15,2.25
+Delhi,2021,38.87,2.07
+Delhi,2022,39.6,1.9
+Delhi,2023,39.6,1.9
+Lakshadweep,1993,28.1,12.2
+Lakshadweep,1994,28.19,12.13
+Lakshadweep,1995,28.28,12.05
+Lakshadweep,1996,28.37,11.98
+Lakshadweep,1997,28.46,11.91
+Lakshadweep,1998,28.55,11.84
+Lakshadweep,1999,28.65,11.76
+Lakshadweep,2000,28.74,11.69
+Lakshadweep,2001,28.83,11.62
+Lakshadweep,2002,28.92,11.55
+Lakshadweep,2003,29.01,11.47
+Lakshadweep,2004,29.1,11.4
+Lakshadweep,2005,28.71,11.64
+Lakshadweep,2006,28.33,11.89
+Lakshadweep,2007,27.94,12.13
+Lakshadweep,2008,27.56,12.37
+Lakshadweep,2009,27.17,12.61
+Lakshadweep,2010,26.79,12.86
+Lakshadweep,2011,26.4,13.1
+Lakshadweep,2012,27.22,12.92
+Lakshadweep,2013,28.04,12.74
+Lakshadweep,2014,28.85,12.55
+Lakshadweep,2015,29.67,12.37
+Lakshadweep,2016,30.49,12.19
+Lakshadweep,2017,31.31,12.01
+Lakshadweep,2018,32.13,11.83
+Lakshadweep,2019,32.95,11.65
+Lakshadweep,2020,33.76,11.46
+Lakshadweep,2021,34.58,11.28
+Lakshadweep,2022,35.4,11.1
+Lakshadweep,2023,35.4,11.1
+Puducherry,1993,34.8,5.2
+Puducherry,1994,34.87,5.28
+Puducherry,1995,34.95,5.36
+Puducherry,1996,35.02,5.45
+Puducherry,1997,35.09,5.53
+Puducherry,1998,35.16,5.61
+Puducherry,1999,35.24,5.69
+Puducherry,2000,35.31,5.77
+Puducherry,2001,35.38,5.85
+Puducherry,2002,35.45,5.94
+Puducherry,2003,35.53,6.02
+Puducherry,2004,35.6,6.1
+Puducherry,2005,35.39,5.9
+Puducherry,2006,35.17,5.7
+Puducherry,2007,34.96,5.5
+Puducherry,2008,34.74,5.3
+Puducherry,2009,34.53,5.1
+Puducherry,2010,34.31,4.9
+Puducherry,2011,34.1,4.7
+Puducherry,2012,34.8,4.78
+Puducherry,2013,35.5,4.86
+Puducherry,2014,36.2,4.95
+Puducherry,2015,36.9,5.03
+Puducherry,2016,37.6,5.11
+Puducherry,2017,38.3,5.19
+Puducherry,2018,39.0,5.27
+Puducherry,2019,39.7,5.35
+Puducherry,2020,40.4,5.44
+Puducherry,2021,41.1,5.52
+Puducherry,2022,41.8,5.6
+Puducherry,2023,41.8,5.6
