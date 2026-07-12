@@ -1,6 +1,7 @@
 import re
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 
@@ -15,7 +16,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     return {
-        "main": pd.read_csv("CS661 Dataset - Sheet1.csv"),
+        "main": pd.read_csv("CS661 Dataset - Sheet.csv"),
         "gdp": pd.read_excel("GDP.xlsx"),
         "employment": pd.read_csv("employment data.csv"),
         "policy": pd.read_excel("Indian Policy Timeline.xlsx"),
@@ -23,6 +24,7 @@ def load_data():
         "literacy": pd.read_excel("Literacy rate.xlsx", header=None),
         "population": pd.read_excel("population.xlsx"),
         "poverty": pd.read_csv("all_states_interpolated_poverty.csv"),
+        "poverty_reference": pd.read_excel("Poverty.xlsx"),
         "sector": pd.read_excel("agriculture_industrial.xlsx"),
     }
 
@@ -57,6 +59,7 @@ def clean_frames(raw):
     literacy = raw["literacy"].copy()
     population = raw["population"].copy()
     poverty = raw["poverty"].copy()
+    poverty_reference = raw["poverty_reference"].copy()
     sector = raw["sector"].copy()
 
     main["State/UT"] = main["State/UT"].map(normalize_state)
@@ -105,8 +108,7 @@ def clean_frames(raw):
     emp["UR (%)"] = to_number(emp["UR (%)"])
     policy["Launch_Year"] = to_number(policy["Launch_Year"])
     policy["Start_Year"] = to_number(policy["Start_Year"])
-    policy["End_Year"] = policy["End_Year"].replace("Present", 2026)
-    policy["End_Year"] = to_number(policy["End_Year"])
+    policy["End_Year"] = to_number(policy["End_Year"].where(policy["End_Year"] != "Present", 2026))
     poverty.columns = [normalize_state(c) if isinstance(c, str) else c for c in poverty.columns]
     for col in poverty.columns:
         if col != "State":
@@ -126,6 +128,7 @@ def clean_frames(raw):
         "literacy": literacy,
         "population": population,
         "poverty": poverty,
+        "poverty_reference": poverty_reference,
         "sector": sector,
     }
 
@@ -142,14 +145,6 @@ def metric_card(label, value, delta=None):
         """,
         unsafe_allow_html=True,
     )
-
-
-def wide_year_to_long(df, state_col, value_prefix="value"):
-    year_cols = [c for c in df.columns if isinstance(c, (int, float)) or str(c).isdigit()]
-    out = df[[state_col] + year_cols].melt(id_vars=state_col, var_name="Year", value_name=value_prefix)
-    out["Year"] = to_number(out["Year"])
-    out[value_prefix] = to_number(out[value_prefix])
-    return out.dropna(subset=["Year"])
 
 
 def parse_literacy_sheet(df):
@@ -193,6 +188,12 @@ def parse_population_sheet(df):
 
 
 def parse_poverty_sheet(df):
+    if "Year" in df.columns:
+        out = df.melt(id_vars="Year", var_name="State", value_name="Poverty")
+        out["State"] = out["State"].map(normalize_state)
+        out["Year"] = pd.to_numeric(out["Year"], errors="coerce")
+        out["Poverty"] = pd.to_numeric(out["Poverty"], errors="coerce")
+        return out.pivot(index="State", columns="Year", values="Poverty").reset_index()
     out = df.copy()
     out = out.rename(columns={out.columns[0]: "State"})
     out["State"] = out["State"].map(normalize_state)
@@ -230,6 +231,113 @@ def get_long_value(df, state, year, state_col="State", value_col="Value"):
     return row.iloc[0][year]
 
 
+STATE_ONE_COLOR = "#2563eb"
+STATE_TWO_COLOR = "#f97316"
+INDIA_COLOR = "#15803d"
+
+
+def comparison_ready(values):
+    return all(pd.notna(value) for value in values)
+
+
+def comparison_insight(label, state_one, state_two, india, state_one_name, state_two_name, fmt, lower_is_better=False):
+    if not comparison_ready([state_one, state_two, india]):
+        return "Data not available for this comparison."
+    difference = abs(state_one - state_two)
+    leader = state_one_name if (state_one < state_two if lower_is_better else state_one > state_two) else state_two_name
+    other = state_two_name if leader == state_one_name else state_one_name
+    relation = "lower" if lower_is_better else "higher"
+    national_relation = "below" if ((state_one + state_two) / 2 < india) else "above"
+    return (
+        f"{leader} is {fmt.format(difference)} {relation} than {other}; "
+        f"the two-state average is {national_relation} the India average of {fmt.format(india)} for {label}."
+    )
+
+
+def comparison_chart_or_message(title, values, chart_builder, insight):
+    if not comparison_ready(values):
+        st.info(f"{title}: Data not available for the selected states and year.")
+        return
+    st.plotly_chart(chart_builder(), width="stretch")
+    st.caption(insight)
+
+
+def apply_comparison_layout(fig, title, xaxis_title=None, yaxis_title=None):
+    fig.update_layout(
+        title=title,
+        template="plotly_white",
+        margin=dict(l=45, r=25, t=60, b=45),
+        legend_title_text="",
+        height=360,
+    )
+    if xaxis_title:
+        fig.update_xaxes(title=xaxis_title)
+    if yaxis_title:
+        fig.update_yaxes(title=yaxis_title)
+    return fig
+
+
+def dumbbell_chart(title, metric, state_one_name, state_two_name, state_one, state_two, india, axis_title, fmt):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[state_one, state_two], y=[metric, metric], mode="lines", line=dict(color="#9ca3af", width=3), showlegend=False, hoverinfo="skip"))
+    for name, value, color in [(state_one_name, state_one, STATE_ONE_COLOR), (state_two_name, state_two, STATE_TWO_COLOR), ("India Average", india, INDIA_COLOR)]:
+        fig.add_trace(go.Scatter(x=[value], y=[metric], mode="markers", name=name, marker=dict(size=13, color=color, symbol="diamond" if name == "India Average" else "circle"), hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    return apply_comparison_layout(fig, title, axis_title, "Comparison")
+
+
+def lollipop_chart(title, state_one_name, state_two_name, state_one, state_two, india, axis_title, fmt):
+    fig = go.Figure()
+    for name, value, color in [(state_one_name, state_one, STATE_ONE_COLOR), (state_two_name, state_two, STATE_TWO_COLOR), ("India Average", india, INDIA_COLOR)]:
+        fig.add_trace(go.Scatter(x=[name, name], y=[0, value], mode="lines+markers", name=name, line=dict(color=color, width=4), marker=dict(size=[1, 15], color=color), hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    return apply_comparison_layout(fig, title, "Geography", axis_title)
+
+
+def bullet_chart(title, state_one_name, state_two_name, state_one, state_two, india, axis_title, fmt):
+    fig = go.Figure()
+    for name, value, color in [(state_one_name, state_one, STATE_ONE_COLOR), (state_two_name, state_two, STATE_TWO_COLOR)]:
+        fig.add_trace(go.Bar(y=[name], x=[value], orientation="h", name=name, marker_color=color, hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    fig.add_vline(x=india, line_dash="dash", line_color=INDIA_COLOR, line_width=3, annotation_text=f"India avg: {fmt.format(india)}", annotation_position="top")
+    return apply_comparison_layout(fig, title, axis_title, "Geography")
+
+
+def butterfly_chart(title, state_one_name, state_two_name, state_one, state_two, india, axis_title, fmt):
+    fig = go.Figure()
+    fig.add_trace(go.Bar(y=[state_one_name], x=[-state_one], orientation="h", name=state_one_name, marker_color=STATE_ONE_COLOR, customdata=[state_one], hovertemplate=f"{state_one_name}: %{{customdata:.1f}}<extra></extra>"))
+    fig.add_trace(go.Bar(y=[state_two_name], x=[state_two], orientation="h", name=state_two_name, marker_color=STATE_TWO_COLOR, customdata=[state_two], hovertemplate=f"{state_two_name}: %{{customdata:.1f}}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=[-india, india], y=[state_one_name, state_two_name], mode="markers", name="India Average", marker=dict(size=12, color=INDIA_COLOR, symbol="diamond"), hovertemplate=f"India Average: {fmt.format(india)}<extra></extra>"))
+    max_value = max(state_one, state_two, india) * 1.2
+    fig.update_xaxes(range=[-max_value, max_value], tickvals=[-max_value, -max_value / 2, 0, max_value / 2, max_value], ticktext=[fmt.format(max_value), fmt.format(max_value / 2), "0", fmt.format(max_value / 2), fmt.format(max_value)])
+    return apply_comparison_layout(fig, title, axis_title, "Geography")
+
+
+def bubble_chart(title, state_one_name, state_two_name, state_one, state_two, india, fmt):
+    values = [state_one, state_two, india]
+    names = [state_one_name, state_two_name, "India Average"]
+    colors = [STATE_ONE_COLOR, STATE_TWO_COLOR, INDIA_COLOR]
+    size_ref = max(values) / 1800 if max(values) else 1
+    fig = go.Figure()
+    for name, value, color in zip(names, values, colors):
+        fig.add_trace(go.Scatter(x=[name], y=[1], mode="markers", name=name, marker=dict(size=[value], sizemode="area", sizeref=size_ref, color=color, opacity=0.72), hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    fig.update_yaxes(visible=False)
+    return apply_comparison_layout(fig, title, "Geography", None)
+
+
+def dot_reference_chart(title, metric, state_one_name, state_two_name, state_one, state_two, india, axis_title, fmt):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[state_one, state_two], y=[metric, metric], mode="lines", line=dict(color="#d1d5db", width=2), showlegend=False, hoverinfo="skip"))
+    for name, value, color, symbol in [(state_one_name, state_one, STATE_ONE_COLOR, "circle"), (state_two_name, state_two, STATE_TWO_COLOR, "circle"), ("India Average", india, INDIA_COLOR, "diamond")]:
+        fig.add_trace(go.Scatter(x=[value], y=[metric], mode="markers", name=name, marker=dict(size=14, color=color, symbol=symbol), hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    return apply_comparison_layout(fig, title, axis_title, "Comparison")
+
+
+def radial_chart(title, state_one_name, state_two_name, state_one, state_two, india, fmt):
+    fig = go.Figure()
+    for name, value, color in [(state_one_name, state_one, STATE_ONE_COLOR), (state_two_name, state_two, STATE_TWO_COLOR), ("India Average", india, INDIA_COLOR)]:
+        fig.add_trace(go.Barpolar(r=[value], theta=[name], name=name, marker_color=color, hovertemplate=f"{name}: {fmt.format(value)}<extra></extra>"))
+    fig.update_layout(title=title, template="plotly_white", margin=dict(l=45, r=25, t=60, b=45), legend_title_text="", height=360, polar=dict(radialaxis=dict(title="HDI", visible=True)))
+    return fig
+
+
 def main_state_list(main, gdp, emp, poverty):
     states = set(main["State/UT"].dropna().unique())
     states |= set(gdp["State/UT"].dropna().unique())
@@ -254,12 +362,13 @@ infant = data["infant"]
 literacy = data["literacy"]
 population = data["population"]
 poverty = data["poverty"]
+poverty_reference = data["poverty_reference"]
 sector = data["sector"]
 
 states = main_state_list(main, gdp, emp, poverty)
 years = sorted(main["Year"].dropna().astype(int).unique().tolist())
 if "focus" not in st.session_state:
-    st.session_state.focus = "overview"
+    st.session_state.focus = "home"
 
 
 st.markdown(
@@ -315,95 +424,104 @@ st.markdown(
         .metric-label { color: var(--muted); font-size: 0.87rem; margin-bottom: 0.3rem; }
         .metric-value { font-size: 1.65rem; font-weight: 800; line-height: 1.05; }
         .delta { margin-top: 0.25rem; font-size: 0.82rem; color: var(--teal); }
-        .nav-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
-        .nav-note { color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem; }
-        .pill {
-            display: inline-block;
-            padding: 0.3rem 0.65rem;
-            border-radius: 999px;
-            background: rgba(29,78,216,0.08);
-            color: var(--blue);
-            font-size: 0.8rem;
-            font-weight: 700;
-            margin-right: 0.35rem;
+        .landing-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            min-height: 172px;
+            padding: 1.25rem;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
         }
+        .landing-card h3 { margin: 0 0 0.45rem; }
+        .landing-card p { color: var(--muted); margin: 0; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-focus_options = ["Overview", "Economic Growth", "Policy Impact", "Human Development", "State Compare"]
+pages = {
+    "🏠 Home": "home",
+    "📈 Economic Development": "economic_development",
+    "📜 Policy Impact": "policy_impact",
+    "🏥 Human Development": "human_development",
+    "⚖ State Comparison": "state_compare",
+    "🌾 Sector Dashboard": "sector_dashboard",
+}
+if st.session_state.focus not in pages.values():
+    st.session_state.focus = "home"
+
+current_label = next(label for label, page in pages.items() if page == st.session_state.focus)
+selected_label = st.radio(
+    "Navigation",
+    list(pages),
+    index=list(pages).index(current_label),
+    horizontal=True,
+    label_visibility="collapsed",
+)
+st.session_state.focus = pages[selected_label]
 
 with st.sidebar:
     st.title("BharatScope")
     st.caption("Indian Economic Development Analytics Platform")
-    current = next((f for f in focus_options if f.lower().replace(" ", "_") == st.session_state.focus), "Overview")
-    choice = st.radio("Analysis lens", focus_options, index=focus_options.index(current))
-    st.session_state.focus = choice.lower().replace(" ", "_")
-    st.divider()
-    if st.session_state.focus in {"economic_growth", "policy_impact"}:
+    if st.session_state.focus in {"economic_development", "policy_impact", "sector_dashboard"}:
+        st.divider()
         selected_year = st.select_slider("Year", options=list(range(1990, 2024)), value=2023)
     elif st.session_state.focus in {"human_development", "state_compare"}:
+        st.divider()
         selected_year = years[-1]
     else:
-        selected_year = st.select_slider("Year", options=years, value=years[-1])
-    selected_state = st.selectbox("State / UT", options=["All India"] + states, index=0)
+        selected_year = years[-1]
+    if st.session_state.focus in {"economic_development", "policy_impact", "human_development", "state_compare"}:
+        selected_state = st.selectbox("State / UT", options=["All India"] + states, index=0)
+    else:
+        selected_state = "All India"
 
-selected_rows_main = main[main["Year"] == selected_year].copy()
 selected_rows_gdp = gdp[gdp["Year"] == selected_year].copy()
 if selected_state != "All India":
-    selected_rows_main = selected_rows_main[selected_rows_main["State/UT"] == selected_state]
     selected_rows_gdp = selected_rows_gdp[selected_rows_gdp["State/UT"] == selected_state]
 
-st.markdown(
-    """
-    <div class="hero">
-        <h1>BharatScope</h1>
-        <p>Indian Economic Development Analytics Platform</p>
-        <p>Explore state development, policy eras, human outcomes, and the structural shift across agriculture, industry, and services using the datasets in this folder.</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+if st.session_state.focus == "home":
+    st.markdown(
+        """
+        <div class="hero">
+            <h1>BharatScope</h1>
+            <p>Interactive Visual Analytics of Indian Economic Development</p>
+            <p>Explore India’s economic progress, policy outcomes, human development, state-level performance, and sectoral transformation through focused analytical dashboards.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<div class='section'>Explore the dashboards</div>", unsafe_allow_html=True)
+    landing_cards = [
+        ("📈", "Economic Development Explorer", "Analyze GSDP, growth, and per-capita income across states.", "economic_development"),
+        ("📜", "Policy Impact Explorer", "Examine policy eras alongside employment, poverty, and growth indicators.", "policy_impact"),
+        ("🏥", "Human Development Dashboard", "Explore literacy, population, poverty, and infant mortality outcomes.", "human_development"),
+        ("⚖", "State Comparison Dashboard", "Benchmark two states against each other and the national average.", "state_compare"),
+        ("🌾", "Sectoral Transformation Dashboard", "Track agriculture, industry, and services in India’s economy.", "sector_dashboard"),
+    ]
+    for row in (landing_cards[:2], landing_cards[2:4], landing_cards[4:]):
+        columns = st.columns(len(row))
+        for column, (icon, title, description, page) in zip(columns, row):
+            with column:
+                st.markdown(
+                    f"<div class='landing-card'><h3>{icon} {title}</h3><p>{description}</p></div>",
+                    unsafe_allow_html=True,
+                )
+                if st.button("Explore", key=f"explore_{page}", width="stretch"):
+                    st.session_state.focus = page
+                    st.rerun()
 
-st.markdown("<div class='section'>Choose a lens</div>", unsafe_allow_html=True)
-nav_cols = st.columns(2)
-nav_cards = [
-    ("Economic Growth", "GSDP and per-capita performance across states."),
-    ("Policy Impact", "Compare reforms, unemployment, and poverty proxies."),
-    ("Human Development", "Literacy, life expectancy, and mortality trends."),
-    ("State Compare", "Benchmark one state against India and peers."),
-]
-for i, (label, desc) in enumerate(nav_cards):
-    with nav_cols[i % 2]:
-        if st.button(label, key=f"nav_{label}", use_container_width=True):
-            st.session_state.focus = label.lower().replace(" ", "_")
-        st.caption(desc)
-st.markdown("---")
-
-overview = st.session_state.focus in {"overview", "economic_growth"}
-
-if overview or st.session_state.focus == "economic_growth":
-    st.subheader("Economic Growth")
-    sector_year = sector[sector["Year"] == (selected_year - 1)].copy()
-    sector_year = sector_year.dropna(subset=["Year"])
+if st.session_state.focus == "economic_development":
+    st.subheader("Economic Development")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        metric_card("GSDP", f"?{selected_rows_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not selected_rows_gdp.empty else "N/A", "Selected year/state")
+        metric_card("GSDP", f"\u20B9{selected_rows_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not selected_rows_gdp.empty else "N/A", "Selected year/state")
     with c2:
         metric_card("GSDP Growth", f"{selected_rows_gdp['gsdp_growth_pct'].mean():.2f}%" if not selected_rows_gdp.empty else "N/A")
     with c3:
-        metric_card("Per Capita Income", f"?{selected_rows_gdp['per_capita_income_rs'].mean():,.0f}" if not selected_rows_gdp.empty else "N/A")
+        metric_card("Per Capita Income", f"\u20B9{selected_rows_gdp['per_capita_income_rs'].mean():,.0f}" if not selected_rows_gdp.empty else "N/A")
     with c4:
         metric_card("PCI Growth", f"{selected_rows_gdp['pci_growth_pct'].mean():.2f}%" if not selected_rows_gdp.empty else "N/A")
-
-    s1, s2, s3 = st.columns(3)
-    with s1:
-        metric_card("Agriculture Share", f"{sector_year['Agriculture - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
-    with s2:
-        metric_card("Industry Share", f"{sector_year['Industry - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
-    with s3:
-        metric_card("Services Share", f"{sector_year['Services - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
 
     left, right = st.columns(2)
     with left:
@@ -414,11 +532,23 @@ if overview or st.session_state.focus == "economic_growth":
             color="State/UT",
             title="GSDP Trends by State",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     with right:
         top_gdp = selected_rows_gdp.sort_values("gsdp_rs_crore", ascending=False).head(10)
         fig = px.bar(top_gdp, x="State/UT", y="gsdp_rs_crore", color="gsdp_growth_pct", title=f"Top GSDP States in {selected_year}")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
+
+if st.session_state.focus == "sector_dashboard":
+    st.subheader("Sector Dashboard")
+    sector_year = sector[sector["Year"] == (selected_year - 1)].copy()
+    sector_year = sector_year.dropna(subset=["Year"])
+    s1, s2, s3 = st.columns(3)
+    with s1:
+        metric_card("Agriculture Share", f"{sector_year['Agriculture - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
+    with s2:
+        metric_card("Industry Share", f"{sector_year['Industry - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
+    with s3:
+        metric_card("Services Share", f"{sector_year['Services - Share to Total GDP'].mean():.2f}%" if not sector_year.empty else "N/A")
 
     lower_left, lower_right = st.columns(2)
     with lower_left:
@@ -427,7 +557,7 @@ if overview or st.session_state.focus == "economic_growth":
         ].copy()
         sector_trend = sector_trend.melt(id_vars="Year", var_name="Sector", value_name="Share")
         fig = px.line(sector_trend, x="Year", y="Share", color="Sector", title="Sector Share in GDP")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     with lower_right:
         sector_latest = sector_year if not sector_year.empty else sector.dropna(subset=["Year"]).sort_values("Year").tail(1)
         if not sector_latest.empty:
@@ -441,19 +571,35 @@ if overview or st.session_state.focus == "economic_growth":
                     ],
                 }
             )
-            fig = px.bar(sector_cards, x="Sector", y="Share", title=f"Sector Share Snapshot ({int(sector_latest['Year'].mean())})")
-            st.plotly_chart(fig, use_container_width=True)
+            sector_cards = sector_cards.dropna(subset=["Share"])
+            if sector_cards.empty:
+                st.info("No data available")
+            else:
+                fig = px.pie(
+                    sector_cards,
+                    values="Share",
+                    names="Sector",
+                    title=f"Sector Share Snapshot ({int(sector_latest['Year'].mean())})",
+                    hole=0.35,
+                    color_discrete_sequence=px.colors.qualitative.Plotly,
+                )
+                fig.update_traces(
+                    textposition="inside",
+                    textinfo="label+percent",
+                    hovertemplate="%{label}: %{value:.2f}%<br>Share: %{percent}<extra></extra>",
+                )
+                st.plotly_chart(fig, width="stretch")
+        else:
+            st.info("No data available")
 
 if st.session_state.focus == "policy_impact":
     st.subheader("Policy Impact")
     policy_years = sorted(set(emp["Year"].dropna().astype(int).unique()) & set(poverty["Year"].dropna().astype(int).unique()))
     policy_year = selected_year if selected_year in policy_years else (policy_years[-1] if policy_years else int(emp["Year"].dropna().max()))
     policy_emp = emp[emp["Year"] == policy_year].copy()
-    policy_main = main[main["Year"] == policy_year].copy()
     poverty_scope = selected_state if selected_state != "All India" else "All India"
     policy_poverty = poverty_value_from_csv(poverty, policy_year, poverty_scope)
     policy_gdp = gdp[gdp["Year"] == policy_year].copy()
-    policy_sector_year = sector[sector["Year"] == (policy_year - 1)].copy()
 
     p1, p2, p3 = st.columns(3)
     with p1:
@@ -469,24 +615,7 @@ if st.session_state.focus == "policy_impact":
             f"{policy_emp['WPR (%)'].mean():.2f}%" if not policy_emp.empty else "N/A",
         )
 
-    g1, g2, g3, g4 = st.columns(4)
-    with g1:
-        metric_card("GSDP", f"₹{policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
-    with g2:
-        metric_card(
-            "Agriculture Share",
-            f"{policy_sector_year['Agriculture - Share to Total GDP'].mean():.2f}%" if not policy_sector_year.empty else "N/A",
-        )
-    with g3:
-        metric_card(
-            "Industry Share",
-            f"{policy_sector_year['Industry - Share to Total GDP'].mean():.2f}%" if not policy_sector_year.empty else "N/A",
-        )
-    with g4:
-        metric_card(
-            "Services Share",
-            f"{policy_sector_year['Services - Share to Total GDP'].mean():.2f}%" if not policy_sector_year.empty else "N/A",
-        )
+    metric_card("GSDP", f"₹{policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
 
     left, right = st.columns(2)
     with left:
@@ -516,7 +645,7 @@ if st.session_state.focus == "policy_impact":
             color="Indicator",
             title="Policy-Linked Indicators",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     with right:
         timeline = policy.copy()
         timeline["Before"] = timeline["Before_Period"].astype(str)
@@ -529,39 +658,15 @@ if st.session_state.focus == "policy_impact":
             color="Category",
             title="Policy Timeline",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
-    lower_left, lower_right = st.columns(2)
-    with lower_left:
-        sector_slice = sector.dropna(subset=["Year"])[
-            ["Year", "Agriculture - Share to Total GDP", "Industry - Share to Total GDP", "Services - Share to Total GDP"]
-        ].copy()
-        sector_slice = sector_slice.melt(id_vars="Year", var_name="Sector", value_name="Share")
-        fig = px.line(sector_slice, x="Year", y="Share", color="Sector", title="Sector Shares Over Time")
-        st.plotly_chart(fig, use_container_width=True)
-    with lower_right:
-        if not policy_sector_year.empty:
-            sector_summary = pd.DataFrame(
-                {
-                    "Sector": ["Agriculture", "Industry", "Services"],
-                    "Share": [
-                        policy_sector_year["Agriculture - Share to Total GDP"].mean(),
-                        policy_sector_year["Industry - Share to Total GDP"].mean(),
-                        policy_sector_year["Services - Share to Total GDP"].mean(),
-                    ],
-                }
-            )
-            fig = px.bar(sector_summary, x="Sector", y="Share", title=f"Sector Share Snapshot ({policy_year})")
-            st.plotly_chart(fig, use_container_width=True)
-    st.dataframe(policy[["Policy_Name", "Category", "Launch_Year", "Description"]], use_container_width=True, hide_index=True)
+    st.dataframe(policy[["Policy_Name", "Category", "Launch_Year", "Description"]], width="stretch", hide_index=True)
 
 if st.session_state.focus == "human_development":
     st.subheader("Human Development")
     literacy_long = parse_literacy_sheet(literacy)
-    poverty_state = poverty.copy()
-    poverty_state = poverty_state.rename(columns={poverty_state.columns[0]: "State"})
+    poverty_state = poverty.melt(id_vars="Year", var_name="State", value_name="Poverty")
     poverty_state["State"] = poverty_state["State"].map(normalize_state)
-    poverty_state = poverty_state.melt(id_vars="State", var_name="Year", value_name="Poverty")
     poverty_state["Year"] = to_number(poverty_state["Year"])
     poverty_state["Poverty"] = to_number(poverty_state["Poverty"])
     human_year = st.radio("Select year", [1991, 2001, 2011], index=0, horizontal=True)
@@ -573,8 +678,18 @@ if st.session_state.focus == "human_development":
     if selected_state != "All India":
         lit_year = lit_year[lit_year["State"] == selected_state]
     pov_year = poverty_state[poverty_state["Year"] == human_year]
+    if pov_year.empty:
+        poverty_fallback = poverty_reference.rename(columns={poverty_reference.columns[0]: "State"}).melt(
+            id_vars="State", var_name="Year", value_name="Poverty"
+        )
+        poverty_fallback["State"] = poverty_fallback["State"].map(normalize_state)
+        poverty_fallback["Year"] = to_number(poverty_fallback["Year"])
+        poverty_fallback["Poverty"] = to_number(poverty_fallback["Poverty"])
+        pov_year = poverty_fallback[poverty_fallback["Year"] == human_year]
     if selected_state != "All India":
         pov_year = pov_year[pov_year["State"] == selected_state]
+    elif "National Average" in pov_year["State"].values:
+        pov_year = pov_year[pov_year["State"] == "National Average"]
     pop_year = population[["Region", human_year]] if human_year in population.columns else population[[population.columns[0], 2011]]
     pop_year = pop_year.rename(columns={pop_year.columns[0]: "State", human_year if human_year in pop_year.columns else 2011: "Population"})
     pop_year["State"] = pop_year["State"].map(normalize_state)
@@ -607,10 +722,10 @@ if st.session_state.focus == "human_development":
         lit_plot["Year"] = to_number(lit_plot["Year"])
         lit_plot = lit_plot.dropna(subset=["Literacy"])
         fig = px.line(lit_plot, x="Year", y="Literacy", color="State", title="Literacy Across States")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     with right:
         fig = px.line(imr_long, x="Year", y="IMR", color="State", title="Infant Mortality Trend")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     bottom_left, bottom_right = st.columns(2)
     with bottom_left:
@@ -622,11 +737,11 @@ if st.session_state.focus == "human_development":
         if selected_state != "All India":
             pop_long = pop_long[pop_long["Region"] == selected_state]
         fig = px.line(pop_long[pop_long["Year"] >= 1951], x="Year", y="Population", color="Region", title="Population Growth Snapshot")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     with bottom_right:
         lit_year_plot = lit_year.sort_values("Literacy", ascending=False).head(12)
         fig = px.bar(lit_year_plot, x="State", y="Literacy", title=f"Literacy Ranking in {human_year}")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 if st.session_state.focus == "state_compare":
     st.subheader("State Compare")
@@ -743,22 +858,102 @@ if st.session_state.focus == "state_compare":
         }
     )
 
-    chart_rows = []
-    for state_name in [compare_state_1, compare_state_2, "India Avg"]:
-        for spec in metric_specs:
-            value = spec["india"] if state_name == "India Avg" else spec["value"](state_name)
-            chart_rows.append({"State/UT": state_name, "Indicator": spec["label"], "Value": value})
+    comparison_data = {
+        spec["label"]: (spec["value"](compare_state_1), spec["value"](compare_state_2), spec["india"], spec["fmt"])
+        for spec in metric_specs
+    }
 
-    chart_df = pd.DataFrame(chart_rows)
-    fig = px.bar(
-        chart_df,
-        x="Indicator",
-        y="Value",
-        color="State/UT",
-        barmode="group",
-        title=f"{compare_state_1} and {compare_state_2} vs India average in {compare_year}",
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    st.dataframe(compare_table, use_container_width=True, hide_index=True)
+    st.markdown("<div class='section'>Metric-by-metric comparison</div>", unsafe_allow_html=True)
+    row_one_left, row_one_right = st.columns(2)
+    literacy_one, literacy_two, literacy_india, literacy_fmt = comparison_data["Literacy"]
+    with row_one_left:
+        comparison_chart_or_message(
+            "Literacy: state dumbbell comparison",
+            [literacy_one, literacy_two, literacy_india],
+            lambda: dumbbell_chart(
+                "Literacy comparison", "Literacy", compare_state_1, compare_state_2,
+                literacy_one, literacy_two, literacy_india, "Literacy rate (%)", literacy_fmt,
+            ),
+            comparison_insight("literacy", literacy_one, literacy_two, literacy_india, compare_state_1, compare_state_2, literacy_fmt),
+        )
+
+    gsdp_one, gsdp_two, gsdp_india, gsdp_fmt = comparison_data["GSDP"]
+    with row_one_right:
+        comparison_chart_or_message(
+            "GSDP: lollipop comparison",
+            [gsdp_one, gsdp_two, gsdp_india],
+            lambda: lollipop_chart(
+                "GSDP comparison", compare_state_1, compare_state_2,
+                gsdp_one, gsdp_two, gsdp_india, "GSDP (Rs crore)", gsdp_fmt,
+            ),
+            comparison_insight("GSDP", gsdp_one, gsdp_two, gsdp_india, compare_state_1, compare_state_2, gsdp_fmt),
+        )
+
+    row_two_left, row_two_right = st.columns(2)
+    unemployment_one, unemployment_two, unemployment_india, unemployment_fmt = comparison_data["Unemployment"]
+    with row_two_left:
+        comparison_chart_or_message(
+            "Unemployment: progress against India average",
+            [unemployment_one, unemployment_two, unemployment_india],
+            lambda: bullet_chart(
+                "Unemployment comparison", compare_state_1, compare_state_2,
+                unemployment_one, unemployment_two, unemployment_india, "Unemployment rate (%)", unemployment_fmt,
+            ),
+            comparison_insight("unemployment", unemployment_one, unemployment_two, unemployment_india, compare_state_1, compare_state_2, unemployment_fmt, lower_is_better=True),
+        )
+
+    mortality_one, mortality_two, mortality_india, mortality_fmt = comparison_data["Infant Mortality"]
+    with row_two_right:
+        comparison_chart_or_message(
+            "Infant mortality: mirrored comparison",
+            [mortality_one, mortality_two, mortality_india],
+            lambda: butterfly_chart(
+                "Infant mortality comparison", compare_state_1, compare_state_2,
+                mortality_one, mortality_two, mortality_india, "Infant mortality rate", mortality_fmt,
+            ),
+            comparison_insight("infant mortality", mortality_one, mortality_two, mortality_india, compare_state_1, compare_state_2, mortality_fmt, lower_is_better=True),
+        )
+
+    row_three_left, row_three_right = st.columns(2)
+    population_one, population_two, population_india, population_fmt = comparison_data["Population"]
+    with row_three_left:
+        comparison_chart_or_message(
+            "Population: proportional-circle comparison",
+            [population_one, population_two, population_india],
+            lambda: bubble_chart(
+                "Population comparison", compare_state_1, compare_state_2,
+                population_one, population_two, population_india, population_fmt,
+            ),
+            comparison_insight("population", population_one, population_two, population_india, compare_state_1, compare_state_2, population_fmt),
+        )
+
+    poverty_one, poverty_two, poverty_india, poverty_fmt = comparison_data["Poverty"]
+    with row_three_right:
+        comparison_chart_or_message(
+            "Poverty: reference-dot comparison",
+            [poverty_one, poverty_two, poverty_india],
+            lambda: dot_reference_chart(
+                "Poverty comparison", "Poverty", compare_state_1, compare_state_2,
+                poverty_one, poverty_two, poverty_india, "Poverty ratio (%)", poverty_fmt,
+            ),
+            comparison_insight("poverty", poverty_one, poverty_two, poverty_india, compare_state_1, compare_state_2, poverty_fmt, lower_is_better=True),
+        )
+
+    row_four_left, row_four_right = st.columns(2)
+    hdi_one, hdi_two, hdi_india, hdi_fmt = comparison_data["HDI"]
+    with row_four_left:
+        comparison_chart_or_message(
+            "HDI: radial comparison",
+            [hdi_one, hdi_two, hdi_india],
+            lambda: radial_chart(
+                "HDI comparison", compare_state_1, compare_state_2,
+                hdi_one, hdi_two, hdi_india, hdi_fmt,
+            ),
+            comparison_insight("HDI", hdi_one, hdi_two, hdi_india, compare_state_1, compare_state_2, hdi_fmt),
+        )
+    with row_four_right:
+        st.empty()
+
+    st.dataframe(compare_table, width="stretch", hide_index=True)
 
 st.caption(f"Dataset coverage: {len(states)} states/UTs, {years[0]} to {years[-1]} in the development panel, plus supporting sector, policy, poverty, literacy, population, mortality, and employment files from this folder.")
