@@ -38,7 +38,7 @@ st.set_page_config(
 
 @st.cache_data
 def load_data():
-    main_path = Path("CS661 Dataset - Sheet.csv")
+    main_path = Path("CS661 Dataset - Sheet1.csv")
     if not main_path.exists():
         main_path = Path("CS661 Dataset - Sheet1.csv")
     return {
@@ -660,7 +660,7 @@ def render_plotly(fig, width="stretch"):
     )
     fig.update_annotations(font=dict(color=ink))
     fig.update_traces(textfont=dict(color=ink), selector=dict(type="bar"))
-    st.plotly_chart(fig, width=width)
+    st.plotly_chart(fig, use_container_width=(width == "stretch"))
 
 
 def comparison_ready(values):
@@ -1144,11 +1144,11 @@ if st.session_state.focus == "economic_development":
     selected_pci_growth = safe_mean(selected_rows_gdp["pci_growth_pct"]) if "pci_growth_pct" in selected_rows_gdp.columns else pd.NA
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        metric_card("GSDP", f"\u20B9{fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
+        metric_card("GSDP", f"₹ {fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
     with c2:
         metric_card("GSDP Growth", f"{fmt_value(selected_growth, '{:.2f}')}%" if pd.notna(selected_growth) else "N/A")
     with c3:
-        metric_card("Per Capita Income", f"\u20B9{fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
+        metric_card("Per Capita Income", f"₹ {fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
     with c4:
         metric_card("PCI Growth", f"{fmt_value(selected_pci_growth, '{:.2f}')}%" if pd.notna(selected_pci_growth) else "N/A")
 
@@ -1245,7 +1245,7 @@ if st.session_state.focus == "policy_impact":
             f"{policy_emp['WPR (%)'].mean():.2f}%" if not policy_emp.empty else "N/A",
         )
 
-    metric_card("GSDP", f"â‚¹{policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
+    metric_card("GSDP", f"₹ {policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
 
     left, right = st.columns(2)
     with left:
@@ -1626,17 +1626,21 @@ if st.session_state.focus == "covid_impact":
             render_plotly(fig, width="stretch")
     with right:
         if {"Unemployment Rate Change", "COVID Deaths 2021"}.issubset(covid_compare.columns):
-            fig = px.scatter(
-                covid_compare,
-                x="COVID Deaths 2021",
-                y="Unemployment Rate Change",
-                size="GSDP 2021" if "GSDP 2021" in covid_compare.columns else None,
-                color="GSDP Change %" if "GSDP Change %" in covid_compare.columns else None,
-                hover_name="State",
-                title="Pandemic Burden vs Unemployment Shift",
-                color_continuous_scale="RdYlGn",
-            )
-            render_plotly(fig, width="stretch")
+            covid_plot_data = covid_compare.dropna(subset=["COVID Deaths 2021", "Unemployment Rate Change"])
+            if not covid_plot_data.empty:
+                fig = px.scatter(
+                    covid_plot_data,
+                    x="COVID Deaths 2021",
+                    y="Unemployment Rate Change",
+                    size="GSDP 2021" if "GSDP 2021" in covid_plot_data.columns and covid_plot_data["GSDP 2021"].notna().any() else None,
+                    color="GSDP Change %" if "GSDP Change %" in covid_plot_data.columns else None,
+                    hover_name="State",
+                    title="Pandemic Burden vs Unemployment Shift",
+                    color_continuous_scale="RdYlGn",
+                )
+                render_plotly(fig, width="stretch")
+            else:
+                st.info("No valid data for pandemic burden vs unemployment analysis.")
 
     trend_cols = [col for col in ["GSDP", "Unemployment Rate", "Per Capita Income", "Poverty Rate"] if col in analysis_panel.columns]
     covid_trend = analysis_panel[analysis_panel["Year"].between(2016, 2023)][["State", "Year"] + trend_cols].copy()
@@ -1747,11 +1751,11 @@ if st.session_state.focus == "forecasting":
         if forecast_indicator in gdp_forecast_map:
             source_col = gdp_forecast_map[forecast_indicator]
             if forecast_state == "All India":
-                series_df = gdp.groupby("Year", as_index=False)[source_col].mean().rename(columns={source_col: forecast_indicator})
+                series_df = main[main["State/UT"].notna()].groupby("Year", as_index=False)[source_col].mean().rename(columns={source_col: forecast_indicator})
                 series_label = "India Average"
             else:
                 series_df = (
-                    gdp[gdp["State/UT"] == forecast_state][["Year", source_col]]
+                    main[main["State/UT"] == forecast_state][["Year", source_col]]
                     .copy()
                     .rename(columns={source_col: forecast_indicator})
                 )
@@ -1767,18 +1771,6 @@ if st.session_state.focus == "forecasting":
             st.warning("Not enough yearly data for an 80/20 chronological train-test forecast.")
         else:
             history, test_out, forecast, metrics = result
-            f1, f2, f3, f4, f5 = st.columns(5)
-            with f1:
-                metric_card("Selected Model", metrics["Model"])
-            with f2:
-                metric_card("Train/Test Rows", f"{metrics['Train Rows']} / {metrics['Test Rows']}")
-            with f3:
-                metric_card("MAE", fmt_value(metrics["MAE"], "{:,.2f}"))
-            with f4:
-                metric_card("RMSE", fmt_value(metrics["RMSE"], "{:,.2f}"))
-            with f5:
-                validation_text = "N/A" if pd.isna(metrics["Validation MAE"]) else fmt_value(metrics["Validation MAE"], "{:,.2f}")
-                metric_card("Forecast Validation", validation_text, f"{metrics['Validation Rows']} used, {metrics['Flagged Rows']} flagged")
 
             fig = go.Figure()
             validation_window = forecast[forecast["Year"].between(2024, 2026)]
