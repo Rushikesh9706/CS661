@@ -1391,11 +1391,11 @@ if st.session_state.focus == "economic_development":
     selected_pci_growth = safe_mean(selected_gdp_rows["pci_growth_pct"]) if "pci_growth_pct" in selected_gdp_rows.columns else pd.NA
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        metric_card("GSDP", f"Ã¢â€šÂ¹ {fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
+        metric_card("GSDP", f"Rs {fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
     with c2:
         metric_card("GSDP Growth", f"{fmt_value(selected_growth, '{:.2f}')}%" if pd.notna(selected_growth) else "N/A")
     with c3:
-        metric_card("Per Capita Income", f"Ã¢â€šÂ¹ {fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
+        metric_card("Per Capita Income", f"Rs {fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
     with c4:
         metric_card("PCI Growth", f"{fmt_value(selected_pci_growth, '{:.2f}')}%" if pd.notna(selected_pci_growth) else "N/A")
 
@@ -2021,18 +2021,8 @@ if st.session_state.focus == "regional_patterns":
                 render_plotly(fig, width="stretch")
                 chart_caption("PCA projection of state development patterns with K-Means clusters.")
             with right:
-                cluster_sizes = cluster_df.groupby("Cluster", as_index=False).size().rename(columns={"size": "States"})
-                fig = px.bar(
-                    cluster_sizes,
-                    x="Cluster",
-                    y="States",
-                    color="Cluster",
-                    title="Cluster Sizes",
-                )
-                fig.update_layout(template="plotly_white")
-                render_plotly(fig, width="stretch")
-                chart_caption("Count of states in each cluster.")
-                profile = cluster_df.groupby("Cluster", as_index=False)[used_features[:5]].mean()
+                profile_features = [feature for feature in used_features if feature not in {"GSDP", "Per Capita Income"}][:5]
+                profile = cluster_df.groupby("Cluster", as_index=False)[profile_features].mean()
                 profile_long = profile.melt(id_vars="Cluster", var_name="Indicator", value_name="Average")
                 fig = px.bar(profile_long, x="Indicator", y="Average", color="Cluster", barmode="group", title="Cluster Average Profile")
                 fig.update_layout(template="plotly_white")
