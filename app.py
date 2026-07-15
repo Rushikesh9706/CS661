@@ -889,6 +889,36 @@ st.markdown(
             background: #ffffff !important;
             border: 2px solid #1f2937 !important;
         }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+            gap: 0.15rem;
+        }
+        section[data-testid="stSidebar"],
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] span {
+            color: rgba(255, 255, 255, 0.92) !important;
+        }
+        section[data-testid="stSidebar"] .stCaptionContainer,
+        section[data-testid="stSidebar"] .stCaptionContainer p {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            padding: 0.28rem 0.2rem !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label[data-baseweb="radio"] > div:first-child {
+            background: rgba(255, 255, 255, 0.96) !important;
+            border: 2px solid rgba(255, 255, 255, 0.96) !important;
+        }
         .stButton > button {
             background: #ffffff !important;
             color: var(--ink) !important;
@@ -942,31 +972,30 @@ pages = {
     "Classification": "classification",
 }
 
-current_label = next(label for label, page in pages.items() if page == st.session_state.focus)
-selected_label = st.radio(
-    "Navigation",
-    list(pages),
-    index=list(pages).index(current_label),
-    horizontal=True,
-    label_visibility="collapsed",
-)
-st.session_state.focus = pages[selected_label]
-
 with st.sidebar:
     st.title("BharatScope")
     st.caption("Indian Economic Development Analytics Platform")
-    if st.session_state.focus in {"development_map", "economic_development", "policy_impact", "sector_dashboard", "covid_impact", "regional_patterns", "classification"}:
-        st.divider()
-        selected_year = st.select_slider("Year", options=list(range(1990, 2024)), value=2023)
-    elif st.session_state.focus in {"human_development", "state_compare"}:
-        st.divider()
-        selected_year = years[-1]
-    else:
-        selected_year = years[-1]
+    st.divider()
+    current_label = next(label for label, page in pages.items() if page == st.session_state.focus)
+    selected_label = st.radio(
+        "Dashboard section",
+        list(pages),
+        index=list(pages).index(current_label),
+        horizontal=False,
+    )
+    st.session_state.focus = pages[selected_label]
+    st.divider()
     if st.session_state.focus in {"development_map", "economic_development", "policy_impact", "human_development", "state_compare", "covid_impact"}:
         selected_state = st.selectbox("State / UT", options=["All India"] + states, index=0)
     else:
         selected_state = "All India"
+
+selected_year = years[-1]
+
+
+def local_year_control(label="Year", key="local_year", value=None):
+    return st.select_slider(label, options=years, value=value or years[-1], key=key)
+
 
 selected_rows_gdp = gdp[gdp["Year"] == selected_year].copy()
 if selected_state != "All India":
@@ -974,6 +1003,7 @@ if selected_state != "All India":
 
 if st.session_state.focus == "development_map":
     st.subheader("State-wise Development Explorer")
+    selected_year = local_year_control("Development snapshot year", key="development_year")
     explorer_indicators = [
         "GSDP",
         "Per Capita Income",
@@ -1104,40 +1134,37 @@ if st.session_state.focus == "home":
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("<div class='section'>Explore the dashboards</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section'>Dashboards</div>", unsafe_allow_html=True)
     landing_cards = [
-        ("ðŸ“ˆ", "Economic Development Explorer", "Analyze GSDP, growth, and per-capita income across states.", "economic_development"),
-        ("ðŸ“œ", "Policy Impact Explorer", "Examine policy eras alongside employment, poverty, and growth indicators.", "policy_impact"),
-        ("ðŸ¥", "Human Development Dashboard", "Explore literacy, population, poverty, and infant mortality outcomes.", "human_development"),
-        ("âš–", "State Comparison Dashboard", "Benchmark two states against each other and the national average.", "state_compare"),
-        ("ðŸŒ¾", "Sectoral Transformation Dashboard", "Track agriculture, industry, and services in Indiaâ€™s economy.", "sector_dashboard"),
-    ]
-    landing_cards = [
-        ("Explore", "Development Explorer", "Compare states using heatmaps, bubble plots, rankings, and geographic state-position views.", "development_map"),
-        ("Growth", "Economic Development Explorer", "Analyze GSDP, growth, and per-capita income across states.", "economic_development"),
-        ("Policy", "Policy Impact Explorer", "Examine policy eras alongside employment, poverty, and growth indicators.", "policy_impact"),
-        ("Human", "Human Development Dashboard", "Explore literacy, population, poverty, and infant mortality outcomes.", "human_development"),
-        ("Compare", "State Comparison Dashboard", "Benchmark two states against each other and the national average.", "state_compare"),
-        ("Sector", "Sectoral Transformation Dashboard", "Track agriculture, industry, and services in India's economy.", "sector_dashboard"),
-        ("COVID", "COVID Impact Analysis", "Compare pre/post pandemic shifts in growth, employment, and recovery.", "covid_impact"),
-        ("Clusters", "Regional Pattern Analysis", "Use PCA and K-Means to find similar state development profiles.", "regional_patterns"),
-        ("Forecast", "Forecasting", "Train/test time-series forecasts for economic and development indicators.", "forecasting"),
-        ("Classify", "Development Classification", "Classify states and inspect Random Forest feature importance.", "classification"),
+        ("Development Explorer", "Compare states with heatmaps, bubble plots, rankings, and geographic state-position views.", "development_map"),
+        ("Economic Development", "Analyze GSDP, growth, and per-capita income across states.", "economic_development"),
+        ("Policy Impact", "Examine policy eras alongside employment, poverty, and growth indicators.", "policy_impact"),
+        ("Human Development", "Review literacy, population, poverty, and infant mortality outcomes.", "human_development"),
+        ("State Comparison", "Benchmark two states against each other and the national average.", "state_compare"),
+        ("Sector Dashboard", "Track agriculture, industry, and services in India's economy.", "sector_dashboard"),
+        ("COVID Impact", "Compare pre/post pandemic shifts in growth, employment, and recovery.", "covid_impact"),
+        ("Regional Patterns", "Use PCA and K-Means to find similar state development profiles.", "regional_patterns"),
+        ("Forecasting", "Train/test time-series forecasts for economic and development indicators.", "forecasting"),
+        ("Classification", "Classify states and inspect Random Forest feature importance.", "classification"),
     ]
     for row in (landing_cards[:2], landing_cards[2:4], landing_cards[4:6], landing_cards[6:8], landing_cards[8:]):
         columns = st.columns(len(row))
-        for column, (icon, title, description, page) in zip(columns, row):
+        for column, (title, description, page) in zip(columns, row):
             with column:
                 st.markdown(
-                    f"<div class='landing-card'><h3>{icon} {title}</h3><p>{description}</p></div>",
+                    f"<div class='landing-card'><h3>{title}</h3><p>{description}</p></div>",
                     unsafe_allow_html=True,
                 )
-                if st.button("Explore", key=f"explore_{page}", width="stretch"):
+                if st.button("Open", key=f"explore_{page}", width="stretch"):
                     st.session_state.focus = page
                     st.rerun()
 
 if st.session_state.focus == "economic_development":
     st.subheader("Economic Development")
+    selected_year = local_year_control("Economic snapshot year", key="economic_year")
+    selected_rows_gdp = gdp[gdp["Year"] == selected_year].copy()
+    if selected_state != "All India":
+        selected_rows_gdp = selected_rows_gdp[selected_rows_gdp["State/UT"] == selected_state]
     selected_gsdp = safe_mean(selected_rows_gdp["gsdp_rs_crore"]) if "gsdp_rs_crore" in selected_rows_gdp.columns else pd.NA
     selected_growth = safe_mean(selected_rows_gdp["gsdp_growth_pct"]) if "gsdp_growth_pct" in selected_rows_gdp.columns else pd.NA
     selected_pci = safe_mean(selected_rows_gdp["per_capita_income_rs"]) if "per_capita_income_rs" in selected_rows_gdp.columns else pd.NA
@@ -1170,6 +1197,7 @@ if st.session_state.focus == "economic_development":
 
 if st.session_state.focus == "sector_dashboard":
     st.subheader("Sector Dashboard")
+    selected_year = local_year_control("Sector snapshot year", key="sector_year")
     sector_year = sector[sector["Year"] == (selected_year - 1)].copy()
     sector_year = sector_year.dropna(subset=["Year"])
     s1, s2, s3 = st.columns(3)
@@ -1224,6 +1252,7 @@ if st.session_state.focus == "sector_dashboard":
 
 if st.session_state.focus == "policy_impact":
     st.subheader("Policy Impact")
+    selected_year = local_year_control("Policy context year", key="policy_year")
     policy_years = sorted(set(emp["Year"].dropna().astype(int).unique()) & set(poverty["Year"].dropna().astype(int).unique()))
     policy_year = selected_year if selected_year in policy_years else (policy_years[-1] if policy_years else int(emp["Year"].dropna().max()))
     policy_emp = emp[emp["Year"] == policy_year].copy()
@@ -1653,6 +1682,7 @@ if st.session_state.focus == "covid_impact":
 
 if st.session_state.focus == "regional_patterns":
     st.subheader("Regional Development Pattern Analysis")
+    selected_year = local_year_control("Cluster snapshot year", key="regional_year")
     if not SKLEARN_AVAILABLE:
         st.error("Install scikit-learn to use PCA and K-Means clustering.")
     else:
@@ -1845,6 +1875,7 @@ if st.session_state.focus == "forecasting":
 
 if st.session_state.focus == "classification":
     st.subheader("Development Category Classification")
+    selected_year = local_year_control("Classification snapshot year", key="classification_year")
     if not SKLEARN_AVAILABLE:
         st.error("Install scikit-learn to use Random Forest classification.")
     else:
