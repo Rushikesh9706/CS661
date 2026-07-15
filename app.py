@@ -1523,7 +1523,7 @@ if st.session_state.focus == "policy_impact":
             f"{policy_emp['WPR (%)'].mean():.2f}%" if not policy_emp.empty else "N/A",
         )
 
-    metric_card("GSDP", f"Ã¢â€šÂ¹ {policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
+    metric_card("GSDP", f"Rs {policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
 
     left, right = st.columns(2)
     with left:
@@ -2021,8 +2021,18 @@ if st.session_state.focus == "regional_patterns":
                 render_plotly(fig, width="stretch")
                 chart_caption("PCA projection of state development patterns with K-Means clusters.")
             with right:
-                profile_features = [feature for feature in used_features if feature not in {"GSDP", "Per Capita Income"}][:5]
-                profile = cluster_df.groupby("Cluster", as_index=False)[profile_features].mean()
+                cluster_sizes = cluster_df.groupby("Cluster", as_index=False).size().rename(columns={"size": "States"})
+                fig = px.bar(
+                    cluster_sizes,
+                    x="Cluster",
+                    y="States",
+                    color="Cluster",
+                    title="Cluster Sizes",
+                )
+                fig.update_layout(template="plotly_white")
+                render_plotly(fig, width="stretch")
+                chart_caption("Count of states in each cluster.")
+                profile = cluster_df.groupby("Cluster", as_index=False)[used_features[:5]].mean()
                 profile_long = profile.melt(id_vars="Cluster", var_name="Indicator", value_name="Average")
                 fig = px.bar(profile_long, x="Indicator", y="Average", color="Cluster", barmode="group", title="Cluster Average Profile")
                 fig.update_layout(template="plotly_white")
