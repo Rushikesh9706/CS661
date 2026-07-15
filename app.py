@@ -1385,18 +1385,12 @@ if st.session_state.focus == "economic_development":
         econ_gdp = econ_gdp[econ_gdp["State/UT"].isin(page_filters["states"])]
     econ_gdp = econ_gdp[econ_gdp["Year"].between(*page_filters["year_range"])]
     selected_gdp_rows = econ_gdp[econ_gdp["Year"] == selected_year].copy()
-    selected_gsdp = safe_mean(selected_gdp_rows["gsdp_rs_crore"]) if "gsdp_rs_crore" in selected_gdp_rows.columns else pd.NA
     selected_growth = safe_mean(selected_gdp_rows["gsdp_growth_pct"]) if "gsdp_growth_pct" in selected_gdp_rows.columns else pd.NA
-    selected_pci = safe_mean(selected_gdp_rows["per_capita_income_rs"]) if "per_capita_income_rs" in selected_gdp_rows.columns else pd.NA
     selected_pci_growth = safe_mean(selected_gdp_rows["pci_growth_pct"]) if "pci_growth_pct" in selected_gdp_rows.columns else pd.NA
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2 = st.columns(2)
     with c1:
-        metric_card("GSDP", f"Rs {fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
-    with c2:
         metric_card("GSDP Growth", f"{fmt_value(selected_growth, '{:.2f}')}%" if pd.notna(selected_growth) else "N/A")
-    with c3:
-        metric_card("Per Capita Income", f"Rs {fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
-    with c4:
+    with c2:
         metric_card("PCI Growth", f"{fmt_value(selected_pci_growth, '{:.2f}')}%" if pd.notna(selected_pci_growth) else "N/A")
 
     left, right = st.columns(2)
