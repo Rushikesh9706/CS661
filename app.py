@@ -26,33 +26,82 @@ except ImportError:
 
 ACTUAL_DATA_MAX_YEAR = 2023
 EXCLUDED_DASHBOARD_YEARS = {2024}
+DATA_DIR = Path(".")
 
 
 st.set_page_config(
     page_title="BharatScope",
-    page_icon="ðŸ‡®ðŸ‡³",
+    page_icon="ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â®ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â³",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 
-@st.cache_data
-def load_data():
-    main_path = Path("CS661 Dataset - Sheet.csv")
-    if not main_path.exists():
-        main_path = Path("CS661 Dataset - Sheet1.csv")
-    return {
-        "main": pd.read_csv(main_path),
-        "gdp": pd.read_excel("GDP.xlsx"),
-        "employment": pd.read_csv("employment data.csv"),
-        "policy": pd.read_excel("Indian Policy Timeline.xlsx"),
-        "infant": pd.read_excel("Infant Mortality.xlsx"),
-        "literacy": pd.read_excel("Literacy rate.xlsx", header=None),
-        "population": pd.read_excel("population.xlsx"),
-        "poverty": pd.read_csv("all_states_interpolated_poverty.csv"),
-        "poverty_reference": pd.read_excel("Poverty.xlsx"),
-        "sector": pd.read_excel("agriculture_industrial.xlsx"),
-    }
+@st.cache_data(show_spinner=False)
+def load_csv_dataset(path_str, *, encoding="utf-8", **kwargs):
+    path = Path(path_str)
+    if not path.exists():
+        raise FileNotFoundError(f"Missing file: {path.name}")
+    try:
+        frame = pd.read_csv(path, encoding=encoding, **kwargs)
+    except pd.errors.EmptyDataError as exc:
+        raise ValueError(f"{path.name} is empty.") from exc
+    except (UnicodeDecodeError, ValueError, OSError) as exc:
+        raise ValueError(f"{path.name} could not be read as a valid CSV file.") from exc
+    if frame.empty:
+        raise ValueError(f"{path.name} is empty.")
+    return frame
+
+
+@st.cache_data(show_spinner=False)
+def load_excel_dataset(path_str, *, sheet_name=0, **kwargs):
+    path = Path(path_str)
+    if not path.exists():
+        raise FileNotFoundError(f"Missing file: {path.name}")
+    try:
+        frame = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
+    except ValueError as exc:
+        raise ValueError(f"{path.name} could not be read as a valid Excel file.") from exc
+    except OSError as exc:
+        raise ValueError(f"{path.name} could not be opened.") from exc
+    if isinstance(frame, pd.DataFrame) and frame.empty:
+        raise ValueError(f"{path.name} is empty.")
+    return frame
+
+
+DATASET_SPECS = {
+    "main": ("csv", "CS661 Dataset - Sheet1.csv", {}),
+    "gdp": ("excel", "GDP.xlsx", {}),
+    "employment": ("csv", "employment data.csv", {}),
+    "policy": ("excel", "Indian Policy Timeline.xlsx", {}),
+    "infant": ("excel", "Infant Mortality.xlsx", {}),
+    "literacy": ("excel", "Literacy rate.xlsx", {"header": None}),
+    "population": ("excel", "population.xlsx", {}),
+    "poverty": ("csv", "all_states_interpolated_poverty.csv", {}),
+    "poverty_reference": ("excel", "Poverty.xlsx", {}),
+    "sector": ("excel", "agriculture_industrial.xlsx", {}),
+}
+
+
+@st.cache_data(show_spinner=False)
+def load_dataset(name):
+    kind, filename, kwargs = DATASET_SPECS[name]
+    loader = load_csv_dataset if kind == "csv" else load_excel_dataset
+    return loader(str(DATA_DIR / filename), **kwargs)
+
+
+def load_required_datasets(names):
+    loaded = {}
+    for name in names:
+        try:
+            loaded[name] = load_dataset(name)
+        except FileNotFoundError as exc:
+            st.error(str(exc))
+            st.stop()
+        except ValueError as exc:
+            st.error(str(exc))
+            st.stop()
+    return loaded
 
 
 def to_number(series):
@@ -96,21 +145,26 @@ def drop_incomplete_year_columns(df):
 
 
 def clean_frames(raw):
-    main = raw["main"].copy()
-    gdp = raw["gdp"].copy()
-    emp = raw["employment"].copy()
-    policy = raw["policy"].copy()
-    infant = raw["infant"].copy()
-    literacy = raw["literacy"].copy()
-    population = raw["population"].copy()
-    poverty = raw["poverty"].copy()
-    poverty_reference = raw["poverty_reference"].copy()
-    sector = raw["sector"].copy()
+    empty = pd.DataFrame()
+    main = raw.get("main", empty).copy()
+    gdp = raw.get("gdp", empty).copy()
+    emp = raw.get("employment", empty).copy()
+    policy = raw.get("policy", empty).copy()
+    infant = raw.get("infant", empty).copy()
+    literacy = raw.get("literacy", empty).copy()
+    population = raw.get("population", empty).copy()
+    poverty = raw.get("poverty", empty).copy()
+    poverty_reference = raw.get("poverty_reference", empty).copy()
+    sector = raw.get("sector", empty).copy()
 
-    main["State/UT"] = main["State/UT"].map(normalize_state)
-    gdp["State/UT"] = gdp["State/UT"].map(normalize_state)
-    emp["State"] = emp["State"].map(normalize_state)
-    population["Region"] = population["Region"].map(normalize_state)
+    if not main.empty and "State/UT" in main.columns:
+        main["State/UT"] = main["State/UT"].map(normalize_state)
+    if not gdp.empty and "State/UT" in gdp.columns:
+        gdp["State/UT"] = gdp["State/UT"].map(normalize_state)
+    if not emp.empty and "State" in emp.columns:
+        emp["State"] = emp["State"].map(normalize_state)
+    if not population.empty and "Region" in population.columns:
+        population["Region"] = population["Region"].map(normalize_state)
 
     for col in [
         "Year",
@@ -142,31 +196,39 @@ def clean_frames(raw):
         "Life Expectancy",
         "Infant Mortality Rate",
     ]:
-        if col in main.columns:
+        if not main.empty and col in main.columns:
             main[col] = to_number(main[col])
+    if main.empty or "COVID Deaths" not in main.columns:
+        st.error("The main dataset 'CS661 Dataset - Sheet1.csv' must include the 'COVID Deaths' column.")
+        st.stop()
 
-    gdp["Year"] = to_number(gdp["Year"])
-    gdp["gsdp_rs_crore"] = to_number(gdp["gsdp_rs_crore"])
-    gdp["gsdp_growth_pct"] = to_number(gdp["gsdp_growth_pct"])
+    if not gdp.empty:
+        gdp["Year"] = to_number(gdp["Year"])
+        gdp["gsdp_rs_crore"] = to_number(gdp["gsdp_rs_crore"])
+        gdp["gsdp_growth_pct"] = to_number(gdp["gsdp_growth_pct"])
     for frame in [main, gdp]:
         for col in ["gsdp_rs_crore", "per_capita_income_rs"]:
             if col in frame.columns:
                 frame[col] = frame[col].replace(0, np.nan)
-    emp["Year"] = to_number(emp["Year"])
-    emp["WPR (%)"] = to_number(emp["WPR (%)"])
-    emp["UR (%)"] = to_number(emp["UR (%)"])
-    policy["Launch_Year"] = to_number(policy["Launch_Year"])
-    policy["Start_Year"] = to_number(policy["Start_Year"])
-    policy["End_Year"] = to_number(policy["End_Year"].where(policy["End_Year"] != "Present", 2026))
-    poverty.columns = [normalize_state(c) if isinstance(c, str) else c for c in poverty.columns]
-    for col in poverty.columns:
-        if col != "State":
-            poverty[col] = to_number(poverty[col])
-    for col in sector.columns:
-        if col != "Financial Year":
-            sector[col] = to_number(sector[col])
-    sector["Year"] = sector["Financial Year"].astype(str).str.extract(r"(\d{4})").astype(float)
-    sector["Year"] = to_number(sector["Year"])
+    if not emp.empty:
+        emp["Year"] = to_number(emp["Year"])
+        emp["WPR (%)"] = to_number(emp["WPR (%)"])
+        emp["UR (%)"] = to_number(emp["UR (%)"])
+    if not policy.empty:
+        policy["Launch_Year"] = to_number(policy["Launch_Year"])
+        policy["Start_Year"] = to_number(policy["Start_Year"])
+        policy["End_Year"] = to_number(policy["End_Year"].where(policy["End_Year"] != "Present", 2026))
+    if not poverty.empty:
+        poverty.columns = [normalize_state(c) if isinstance(c, str) else c for c in poverty.columns]
+        for col in poverty.columns:
+            if col != "State":
+                poverty[col] = to_number(poverty[col])
+    if not sector.empty:
+        for col in sector.columns:
+            if col != "Financial Year":
+                sector[col] = to_number(sector[col])
+        sector["Year"] = sector["Financial Year"].astype(str).str.extract(r"(\d{4})").astype(float)
+        sector["Year"] = to_number(sector["Year"])
 
     main = exclude_incomplete_year_rows(main)
     gdp = exclude_incomplete_year_rows(gdp)
@@ -206,6 +268,10 @@ def metric_card(label, value, delta=None):
     )
 
 
+def chart_caption(text):
+    st.caption(text)
+
+
 def parse_literacy_sheet(df):
     year_labels = []
     for value in df.iloc[2, 1:].tolist():
@@ -216,11 +282,14 @@ def parse_literacy_sheet(df):
     data = df.iloc[4:, : len(year_labels) + 1].copy()
     data.columns = ["State"] + year_labels
     data["State"] = data["State"].map(normalize_state)
-    for idx in range(1, len(data.columns)):
-        data.iloc[:, idx] = pd.to_numeric(
-            data.iloc[:, idx].replace(["na", "NA", "n.a.", "-", "--"], pd.NA),
-            errors="coerce",
-        )
+    # Convert all year columns in one pass to avoid pandas slice-assignment issues
+    # that can surface on newer runtimes such as Streamlit Cloud.
+    year_cols = [col for col in data.columns if col != "State"]
+    data[year_cols] = (
+        data[year_cols]
+        .replace(["na", "NA", "n.a.", "-", "--"], pd.NA)
+        .apply(pd.to_numeric, errors="coerce")
+    )
     return data
 
 
@@ -299,6 +368,81 @@ def fmt_value(value, fmt):
     if pd.isna(value):
         return "N/A"
     return fmt.format(value)
+
+
+def prepare_size_column(df, source_col, target_col="Bubble Size", min_size=8):
+    out = df.copy()
+    if source_col not in out.columns:
+        out[target_col] = min_size
+        return out
+    sizes = pd.to_numeric(out[source_col], errors="coerce").abs()
+    if sizes.notna().any():
+        sizes = sizes.fillna(sizes.median())
+        if pd.isna(sizes.median()) or float(sizes.max()) == 0:
+            out[target_col] = min_size
+        else:
+            out[target_col] = sizes.fillna(min_size)
+    else:
+        out[target_col] = min_size
+    out[target_col] = pd.to_numeric(out[target_col], errors="coerce").fillna(min_size).clip(lower=min_size)
+    return out
+
+
+def page_filter_key(page, name):
+    return f"{page}_{name}"
+
+
+def sidebar_page_filters(page, states, years):
+    filters = {"states": list(states), "year_range": (years[0], years[-1]), "category": None, "value_range": None}
+    with st.sidebar.expander("Filters", expanded=True):
+        if page in {"development_map", "economic_development", "policy_impact", "human_development", "state_compare", "covid_impact", "regional_patterns", "forecasting", "classification", "sector_dashboard"}:
+            filters["states"] = st.multiselect(
+                "State",
+                options=states,
+                default=list(states),
+                key=page_filter_key(page, "states"),
+            )
+        if page in {"development_map", "economic_development", "policy_impact", "human_development", "covid_impact", "regional_patterns", "forecasting", "classification", "sector_dashboard"}:
+            filters["year_range"] = st.slider(
+                "Year range",
+                min_value=int(years[0]),
+                max_value=int(years[-1]),
+                value=(int(years[0]), int(years[-1])),
+                key=page_filter_key(page, "year_range"),
+            )
+        if page == "policy_impact":
+            policy_frame = load_dataset("policy")
+            policy_categories = sorted([c for c in policy_frame["Category"].dropna().astype(str).unique().tolist() if str(c).strip()]) if "Category" in policy_frame.columns else []
+            if policy_categories:
+                filters["category"] = st.selectbox(
+                    "Category",
+                    options=["All"] + policy_categories,
+                    index=0,
+                    key=page_filter_key(page, "category"),
+                )
+        if page == "economic_development":
+            gdp_min = float(np.nanmin(pd.to_numeric(gdp["gsdp_rs_crore"], errors="coerce")))
+            gdp_max = float(np.nanmax(pd.to_numeric(gdp["gsdp_rs_crore"], errors="coerce")))
+            filters["value_range"] = st.slider(
+                "GSDP range",
+                min_value=0.0,
+                max_value=float(max(gdp_max, 1.0)),
+                value=(0.0, float(max(gdp_max, 1.0))),
+                key=page_filter_key(page, "gsdp_range"),
+            )
+        if page == "human_development":
+            filters["value_range"] = st.slider(
+                "Literacy range",
+                min_value=0.0,
+                max_value=100.0,
+                value=(0.0, 100.0),
+                key=page_filter_key(page, "literacy_range"),
+            )
+    return filters
+
+
+def show_no_data_message(message="No data matches the selected filters."):
+    st.info(message)
 
 
 STATE_CENTROIDS = {
@@ -660,7 +804,14 @@ def render_plotly(fig, width="stretch"):
     )
     fig.update_annotations(font=dict(color=ink))
     fig.update_traces(textfont=dict(color=ink), selector=dict(type="bar"))
-    st.plotly_chart(fig, width=width)
+    st.plotly_chart(fig, use_container_width=(width == "stretch"))
+
+
+def downsample_frame(df, max_points=5000):
+    if len(df) <= max_points:
+        return df
+    step = max(len(df) // max_points, 1)
+    return df.iloc[::step].copy()
 
 
 def comparison_ready(values):
@@ -779,18 +930,12 @@ def main_state_list(main, gdp, emp, poverty):
     return sorted(s for s in states if pd.notna(s) and str(s).strip())
 
 
-raw = load_data()
-data = clean_frames(raw)
-main = data["main"]
-gdp = data["gdp"]
-emp = data["employment"]
-policy = data["policy"]
-infant = data["infant"]
-literacy = data["literacy"]
-population = data["population"]
-poverty = data["poverty"]
-poverty_reference = data["poverty_reference"]
-sector = data["sector"]
+core_raw = load_required_datasets(["main", "gdp", "employment", "poverty"])
+core_data = clean_frames(core_raw)
+main = core_data["main"]
+gdp = core_data["gdp"]
+emp = core_data["employment"]
+poverty = core_data["poverty"]
 analysis_panel = build_analysis_panel(main, emp, poverty)
 
 states = main_state_list(main, gdp, emp, poverty)
@@ -810,6 +955,7 @@ st.markdown(
             --bg1: #f3efe4;
             --bg2: #e8efe8;
             --ink: #1f2937;
+            --ink-strong: #111827;
             --muted: #5b6472;
             --border: rgba(31, 41, 55, 0.12);
             --gold: #b45309;
@@ -822,15 +968,22 @@ st.markdown(
                 radial-gradient(circle at 12% 10%, rgba(180,83,9,0.15), transparent 22%),
                 radial-gradient(circle at 88% 8%, rgba(15,118,110,0.14), transparent 20%),
                 linear-gradient(180deg, var(--bg1), var(--bg2));
-            color: var(--ink);
+            color: var(--ink-strong);
+            line-height: 1.55;
+            font-size: 16px;
         }
         .hero {
             background: linear-gradient(135deg, rgba(17,24,39,0.97), rgba(55,65,81,0.93));
             color: #fff;
             border-radius: 30px;
-            padding: 2.1rem 2.2rem;
+            padding: 2.8rem 2.4rem;
             border: 1px solid rgba(255,255,255,0.08);
             box-shadow: 0 20px 50px rgba(15,23,42,0.20);
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.9rem;
         }
         .hero h1 {
             margin: 0;
@@ -838,11 +991,13 @@ st.markdown(
             line-height: 1;
         }
         .hero p {
-            margin: 0.55rem 0 0 0;
+            margin: 0;
+            line-height: 1.65;
             color: rgba(255,255,255,0.8);
         }
         .section {
-            margin-top: 1rem;
+            margin-top: 1.75rem;
+            margin-bottom: 1rem;
             font-size: 1.1rem;
             font-weight: 800;
         }
@@ -850,7 +1005,7 @@ st.markdown(
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 1rem 1.05rem;
+            padding: 1.1rem 1.1rem;
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
         }
         .metric-label { color: var(--muted); font-size: 0.87rem; margin-bottom: 0.3rem; }
@@ -861,7 +1016,7 @@ st.markdown(
             border: 1px solid var(--border);
             border-radius: 18px;
             min-height: 172px;
-            padding: 1.25rem;
+            padding: 1.35rem 1.3rem;
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
         }
         .landing-card h3 { margin: 0 0 0.45rem; }
@@ -872,13 +1027,14 @@ st.markdown(
             color: var(--ink) !important;
         }
         div[data-testid="stRadio"] div[role="radiogroup"] {
-            gap: 0.45rem 0.65rem;
+            gap: 0.55rem 0.8rem;
+            flex-wrap: wrap;
         }
         div[data-testid="stRadio"] div[role="radiogroup"] label {
             background: rgba(255, 255, 255, 0.76) !important;
             border: 1px solid var(--border) !important;
             border-radius: 999px !important;
-            padding: 0.28rem 0.72rem !important;
+            padding: 0.45rem 0.95rem !important;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
         }
         div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
@@ -919,19 +1075,60 @@ st.markdown(
             background: rgba(255, 255, 255, 0.96) !important;
             border: 2px solid rgba(255, 255, 255, 0.96) !important;
         }
-        .stButton > button {
+        .stButton button, .stButton > button {
             background: #ffffff !important;
-            color: var(--ink) !important;
+            color: var(--ink-strong) !important;
             border: 1px solid var(--border) !important;
             border-radius: 10px !important;
+            min-height: 44px !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
         }
+        .stButton button span,
+        .stButton > button span {
+            color: var(--ink-strong) !important;
+        }
+        .stButton button:hover,
         .stButton > button:hover {
             color: #0f172a !important;
             border-color: rgba(37, 99, 235, 0.45) !important;
             background: rgba(255, 255, 255, 0.92) !important;
         }
+        section[data-testid="stSidebar"],
+        section[data-testid="stSidebar"] * {
+            color: #f8fafc !important;
+        }
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] .stSelectbox label,
+        section[data-testid="stSidebar"] .stSlider label,
+        section[data-testid="stSidebar"] .stMultiselect label,
+        section[data-testid="stSidebar"] .stText,
+        section[data-testid="stSidebar"] .stCaption,
+        section[data-testid="stSidebar"] .stMarkdown {
+            color: #f8fafc !important;
+        }
         label, .stSelectbox label, .stSlider label {
-            color: var(--ink) !important;
+            color: var(--ink-strong) !important;
+            font-weight: 600 !important;
+        }
+        .stMarkdown, .stCaption, .stText, p, li {
+            color: var(--ink-strong);
+        }
+        div[data-testid="stDataFrame"],
+        div[data-testid="stDownloadButton"] {
+            margin-top: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        div[data-testid="stPlotlyChart"] {
+            margin: 0.8rem 0 1rem 0;
+        }
+        .stButton > button {
+            padding: 0.6rem 1rem !important;
+        }
+        :focus-visible {
+            outline: 3px solid rgba(29, 78, 216, 0.55) !important;
+            outline-offset: 3px !important;
+            border-radius: 8px;
         }
     </style>
     """,
@@ -939,12 +1136,12 @@ st.markdown(
 )
 
 pages = {
-    "ðŸ  Home": "home",
-    "ðŸ“ˆ Economic Development": "economic_development",
-    "ðŸ“œ Policy Impact": "policy_impact",
-    "ðŸ¥ Human Development": "human_development",
-    "âš– State Comparison": "state_compare",
-    "ðŸŒ¾ Sector Dashboard": "sector_dashboard",
+    "ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â  Home": "home",
+    "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‹â€  Economic Development": "economic_development",
+    "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€œ Policy Impact": "policy_impact",
+    "ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¥ Human Development": "human_development",
+    "ÃƒÂ¢Ã…Â¡Ã¢â‚¬â€œ State Comparison": "state_compare",
+    "ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â¾ Sector Dashboard": "sector_dashboard",
 }
 pages.update(
     {
@@ -986,7 +1183,7 @@ with st.sidebar:
     st.session_state.focus = pages[selected_label]
     st.divider()
     if st.session_state.focus in {"development_map", "economic_development", "policy_impact", "human_development", "state_compare", "covid_impact"}:
-        selected_state = st.selectbox("State / UT", options=["All India"] + states, index=0)
+        selected_state = st.selectbox("State / UT", options=["All India"] + states, index=0, help="Filter the page to a single state or union territory.")
     else:
         selected_state = "All India"
 
@@ -996,10 +1193,29 @@ selected_year = years[-1]
 def local_year_control(label="Year", key="local_year", value=None):
     return st.select_slider(label, options=years, value=value or years[-1], key=key)
 
+page_filters = sidebar_page_filters(st.session_state.focus, states, years)
 
 selected_rows_gdp = gdp[gdp["Year"] == selected_year].copy()
 if selected_state != "All India":
     selected_rows_gdp = selected_rows_gdp[selected_rows_gdp["State/UT"] == selected_state]
+
+
+@st.cache_data(show_spinner=False)
+def load_page_datasets(page_name):
+    names_by_page = {
+        "development_map": [],
+        "economic_development": [],
+        "policy_impact": ["policy"],
+        "human_development": ["infant", "literacy", "population", "poverty_reference"],
+        "state_compare": ["infant", "literacy", "population", "poverty_reference"],
+        "sector_dashboard": ["sector"],
+        "covid_impact": [],
+        "regional_patterns": [],
+        "forecasting": [],
+        "classification": [],
+        "home": [],
+    }
+    return load_required_datasets(names_by_page.get(page_name, []))
 
 if st.session_state.focus == "development_map":
     st.subheader("State-wise Development Explorer")
@@ -1019,19 +1235,17 @@ if st.session_state.focus == "development_map":
     explorer_indicators = [col for col in explorer_indicators if col in analysis_panel.columns]
     control_one, control_two, control_three = st.columns([1.15, 1.15, 1.15])
     with control_one:
-        explorer_indicator = st.selectbox("Primary indicator", explorer_indicators, index=0)
+        explorer_indicator = st.selectbox("Primary indicator", explorer_indicators, index=0, help="Pick the main metric used for size, color, and ranking.")
     with control_two:
-        x_indicator = st.selectbox("X-axis", [col for col in explorer_indicators if col != explorer_indicator], index=0)
+        x_indicator = st.selectbox("X-axis", [col for col in explorer_indicators if col != explorer_indicator], index=0, help="Select the metric shown on the horizontal axis.")
     with control_three:
-        y_indicator = st.selectbox("Y-axis", [col for col in explorer_indicators if col != explorer_indicator], index=1)
+        y_indicator = st.selectbox("Y-axis", [col for col in explorer_indicators if col != explorer_indicator], index=1, help="Select the metric shown on the vertical axis.")
 
     map_df, map_year = state_year_snapshot(analysis_panel, selected_year, explorer_indicator)
-    if selected_state != "All India":
-        map_df = map_df[map_df["State"] == selected_state]
+    if page_filters["states"]:
+        map_df = map_df[map_df["State"].isin(page_filters["states"])]
     map_df = map_df.copy()
-    map_df["Bubble Size"] = to_number(map_df[explorer_indicator]).abs().fillna(0)
-    if not map_df.empty and map_df["Bubble Size"].max() == 0:
-        map_df["Bubble Size"] = 1
+    map_df = prepare_size_column(map_df, explorer_indicator)
 
     m1, m2, m3 = st.columns(3)
     with m1:
@@ -1042,7 +1256,7 @@ if st.session_state.focus == "development_map":
         metric_card("Average", fmt_value(safe_mean(map_df[explorer_indicator]), "{:,.2f}") if not map_df.empty else "N/A")
 
     if map_df.empty:
-        st.info("No data available for the selected indicator/year.")
+        show_no_data_message("No data matches the selected filters for this page.")
     else:
         hover_cols = [
             col
@@ -1065,6 +1279,7 @@ if st.session_state.focus == "development_map":
             )
             fig.update_layout(template="plotly_white")
             render_plotly(fig, width="stretch")
+            chart_caption(f"{explorer_indicator} compared against {x_indicator} and {y_indicator} for {map_year}.")
         with right:
             top_df = map_df.dropna(subset=[explorer_indicator]).sort_values(explorer_indicator, ascending=False).head(15)
             fig = px.bar(
@@ -1078,6 +1293,7 @@ if st.session_state.focus == "development_map":
             )
             fig.update_layout(template="plotly_white", yaxis={"categoryorder": "total ascending"})
             render_plotly(fig, width="stretch")
+            chart_caption(f"Top 15 states ranked by {explorer_indicator} in {map_year}.")
 
         state_position = map_df.dropna(subset=["Lat", "Lon", explorer_indicator]).copy()
         if not state_position.empty:
@@ -1094,6 +1310,7 @@ if st.session_state.focus == "development_map":
             )
             fig.update_layout(template="plotly_white", xaxis_title="Longitude", yaxis_title="Latitude")
             render_plotly(fig, width="stretch")
+            chart_caption("Geographic view of the same indicator using longitude and latitude anchors.")
 
     heat_df = analysis_panel[["State", "Year", explorer_indicator]].dropna()
     if selected_state != "All India":
@@ -1117,6 +1334,7 @@ if st.session_state.focus == "development_map":
             color_continuous_scale="Cividis",
         )
         render_plotly(fig, width="stretch")
+        chart_caption(f"Heatmap of {explorer_indicator} across the selected states and years.")
         st.dataframe(
             map_df[["State", "Year", explorer_indicator, x_indicator, y_indicator]].sort_values(explorer_indicator, ascending=False),
             width="stretch",
@@ -1129,7 +1347,7 @@ if st.session_state.focus == "home":
         <div class="hero">
             <h1>BharatScope</h1>
             <p>Interactive Visual Analytics of Indian Economic Development</p>
-            <p>Explore Indiaâ€™s economic progress, policy outcomes, human development, state-level performance, and sectoral transformation through focused analytical dashboards.</p>
+            <p>Explore India's economic progress, policy outcomes, human development, state-level performance, and sectoral transformation through focused analytical dashboards.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1155,49 +1373,66 @@ if st.session_state.focus == "home":
                     f"<div class='landing-card'><h3>{title}</h3><p>{description}</p></div>",
                     unsafe_allow_html=True,
                 )
-                if st.button("Open", key=f"explore_{page}", width="stretch"):
+                if st.button("Open", key=f"explore_{page}", width="stretch", help=f"Open the {title} section."):
                     st.session_state.focus = page
                     st.rerun()
 
 if st.session_state.focus == "economic_development":
     st.subheader("Economic Development")
     selected_year = local_year_control("Economic snapshot year", key="economic_year")
-    selected_rows_gdp = gdp[gdp["Year"] == selected_year].copy()
-    if selected_state != "All India":
-        selected_rows_gdp = selected_rows_gdp[selected_rows_gdp["State/UT"] == selected_state]
-    selected_gsdp = safe_mean(selected_rows_gdp["gsdp_rs_crore"]) if "gsdp_rs_crore" in selected_rows_gdp.columns else pd.NA
-    selected_growth = safe_mean(selected_rows_gdp["gsdp_growth_pct"]) if "gsdp_growth_pct" in selected_rows_gdp.columns else pd.NA
-    selected_pci = safe_mean(selected_rows_gdp["per_capita_income_rs"]) if "per_capita_income_rs" in selected_rows_gdp.columns else pd.NA
-    selected_pci_growth = safe_mean(selected_rows_gdp["pci_growth_pct"]) if "pci_growth_pct" in selected_rows_gdp.columns else pd.NA
+    econ_gdp = gdp.copy()
+    if page_filters["states"]:
+        econ_gdp = econ_gdp[econ_gdp["State/UT"].isin(page_filters["states"])]
+    econ_gdp = econ_gdp[econ_gdp["Year"].between(*page_filters["year_range"])]
+    selected_gdp_rows = econ_gdp[econ_gdp["Year"] == selected_year].copy()
+    selected_gsdp = safe_mean(selected_gdp_rows["gsdp_rs_crore"]) if "gsdp_rs_crore" in selected_gdp_rows.columns else pd.NA
+    selected_growth = safe_mean(selected_gdp_rows["gsdp_growth_pct"]) if "gsdp_growth_pct" in selected_gdp_rows.columns else pd.NA
+    selected_pci = safe_mean(selected_gdp_rows["per_capita_income_rs"]) if "per_capita_income_rs" in selected_gdp_rows.columns else pd.NA
+    selected_pci_growth = safe_mean(selected_gdp_rows["pci_growth_pct"]) if "pci_growth_pct" in selected_gdp_rows.columns else pd.NA
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        metric_card("GSDP", f"\u20B9{fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
+        metric_card("GSDP", f"Ã¢â€šÂ¹ {fmt_value(selected_gsdp, '{:,.0f}')} Cr" if pd.notna(selected_gsdp) else "N/A", "Selected year/state")
     with c2:
         metric_card("GSDP Growth", f"{fmt_value(selected_growth, '{:.2f}')}%" if pd.notna(selected_growth) else "N/A")
     with c3:
-        metric_card("Per Capita Income", f"\u20B9{fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
+        metric_card("Per Capita Income", f"Ã¢â€šÂ¹ {fmt_value(selected_pci, '{:,.0f}')}" if pd.notna(selected_pci) else "N/A")
     with c4:
         metric_card("PCI Growth", f"{fmt_value(selected_pci_growth, '{:.2f}')}%" if pd.notna(selected_pci_growth) else "N/A")
 
     left, right = st.columns(2)
     with left:
-        gdp_trend = gdp.dropna(subset=["gsdp_rs_crore"]).copy()
-        fig = px.line(
-            gdp_trend,
-            x="Year",
-            y="gsdp_rs_crore",
-            color="State/UT",
-            title="GSDP Trends by State",
-        )
-        render_plotly(fig, width="stretch")
+        gdp_trend = econ_gdp.dropna(subset=["gsdp_rs_crore"]).copy()
+        gdp_trend = downsample_frame(gdp_trend, 4000)
+        if gdp_trend.empty:
+            show_no_data_message("No GSDP data matches the selected filters.")
+        else:
+            fig = px.line(
+                gdp_trend,
+                x="Year",
+                y="gsdp_rs_crore",
+                color="State/UT",
+                title="GSDP Trends by State",
+            )
+            render_plotly(fig, width="stretch")
+        chart_caption("GSDP trend lines for the selected states and year range.")
     with right:
-        top_gdp = selected_rows_gdp.dropna(subset=["gsdp_rs_crore"]).sort_values("gsdp_rs_crore", ascending=False).head(10)
-        fig = px.bar(top_gdp, x="State/UT", y="gsdp_rs_crore", color="gsdp_growth_pct", title=f"Top GSDP States in {selected_year}")
-        render_plotly(fig, width="stretch")
+        top_gdp = selected_gdp_rows.dropna(subset=["gsdp_rs_crore"]).sort_values("gsdp_rs_crore", ascending=False).head(10)
+        if top_gdp.empty:
+            show_no_data_message("No state-level GSDP values match the selected filters.")
+        else:
+            fig = px.bar(top_gdp, x="State/UT", y="gsdp_rs_crore", color="gsdp_growth_pct", title=f"Top GSDP States in {selected_year}")
+            render_plotly(fig, width="stretch")
+            chart_caption(f"Top GSDP states for {selected_year}.")
 
 if st.session_state.focus == "sector_dashboard":
     st.subheader("Sector Dashboard")
     selected_year = local_year_control("Sector snapshot year", key="sector_year")
+    page_data = load_page_datasets("sector_dashboard")
+    sector = page_data["sector"].copy()
+    if "Year" not in sector.columns and "Financial Year" in sector.columns:
+        sector["Year"] = sector["Financial Year"].astype(str).str.extract(r"(\d{4})").astype(float)
+    if "Year" in sector.columns:
+        sector["Year"] = to_number(sector["Year"])
     sector_year = sector[sector["Year"] == (selected_year - 1)].copy()
     sector_year = sector_year.dropna(subset=["Year"])
     s1, s2, s3 = st.columns(3)
@@ -1213,9 +1448,14 @@ if st.session_state.focus == "sector_dashboard":
         sector_trend = sector.dropna(subset=["Year"])[
             ["Year", "Agriculture - Share to Total GDP", "Industry - Share to Total GDP", "Services - Share to Total GDP"]
         ].copy()
+        sector_trend = sector_trend[sector_trend["Year"].between(*page_filters["year_range"])]
         sector_trend = sector_trend.melt(id_vars="Year", var_name="Sector", value_name="Share")
-        fig = px.line(sector_trend, x="Year", y="Share", color="Sector", title="Sector Share in GDP")
-        render_plotly(fig, width="stretch")
+        if sector_trend.empty:
+            show_no_data_message("No sector data matches the selected filters.")
+        else:
+            fig = px.line(sector_trend, x="Year", y="Share", color="Sector", title="Sector Share in GDP")
+            render_plotly(fig, width="stretch")
+            chart_caption("Sector share trend over time.")
     with lower_right:
         sector_latest = sector_year if not sector_year.empty else sector.dropna(subset=["Year"]).sort_values("Year").tail(1)
         if not sector_latest.empty:
@@ -1247,18 +1487,27 @@ if st.session_state.focus == "sector_dashboard":
                     hovertemplate="%{label}: %{value:.2f}%<br>Share: %{percent}<extra></extra>",
                 )
                 render_plotly(fig, width="stretch")
+                chart_caption(f"Sector share snapshot for {int(sector_latest['Year'].mean())}.")
         else:
             st.info("No data available")
 
 if st.session_state.focus == "policy_impact":
     st.subheader("Policy Impact")
     selected_year = local_year_control("Policy context year", key="policy_year")
+    page_data = load_page_datasets("policy_impact")
+    policy = page_data["policy"].copy()
     policy_years = sorted(set(emp["Year"].dropna().astype(int).unique()) & set(poverty["Year"].dropna().astype(int).unique()))
     policy_year = selected_year if selected_year in policy_years else (policy_years[-1] if policy_years else int(emp["Year"].dropna().max()))
     policy_emp = emp[emp["Year"] == policy_year].copy()
+    if page_filters["states"]:
+        policy_emp = policy_emp[policy_emp["State"].isin(page_filters["states"])]
     poverty_scope = selected_state if selected_state != "All India" else "All India"
     policy_poverty = poverty_value_from_csv(poverty, policy_year, poverty_scope)
     policy_gdp = gdp[gdp["Year"] == policy_year].copy()
+    if page_filters["states"]:
+        policy_gdp = policy_gdp[policy_gdp["State/UT"].isin(page_filters["states"])]
+    if page_filters["category"] and page_filters["category"] != "All":
+        policy = policy[policy["Category"] == page_filters["category"]]
 
     p1, p2, p3 = st.columns(3)
     with p1:
@@ -1274,7 +1523,7 @@ if st.session_state.focus == "policy_impact":
             f"{policy_emp['WPR (%)'].mean():.2f}%" if not policy_emp.empty else "N/A",
         )
 
-    metric_card("GSDP", f"â‚¹{policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
+    metric_card("GSDP", f"Ã¢â€šÂ¹ {policy_gdp['gsdp_rs_crore'].mean():,.0f} Cr" if not policy_gdp.empty else "N/A")
 
     left, right = st.columns(2)
     with left:
@@ -1297,45 +1546,47 @@ if st.session_state.focus == "policy_impact":
                 for y in policy_years
             ]
         )
-        fig = px.line(
-            policy_trend,
-            x="Year",
-            y="Value",
-            color="Indicator",
-            title="Policy-Linked Indicators",
-        )
-        render_plotly(fig, width="stretch")
-    with right:
-        timeline = policy.copy()
-        timeline["Before"] = timeline["Before_Period"].astype(str)
-        timeline["After"] = timeline["After_Period"].astype(str)
-        fig = px.timeline(
-            timeline,
-            x_start="Start_Year",
-            x_end="End_Year",
-            y="Policy_Name",
-            color="Category",
-            title="Policy Timeline",
-        )
-        render_plotly(fig, width="stretch")
+        policy_trend["Year"] = to_number(policy_trend["Year"])
+        policy_trend = policy_trend[policy_trend["Year"].between(*page_filters["year_range"])]
+        if policy_trend.empty:
+            show_no_data_message("No policy-linked data matches the selected filters.")
+        else:
+            center_left, center_center, center_right = st.columns([1, 6, 1])
+            with center_center:
+                fig = px.line(
+                    policy_trend,
+                    x="Year",
+                    y="Value",
+                    color="Indicator",
+                    title="Policy-Linked Indicators",
+                )
+                fig.update_layout(margin=dict(l=30, r=30, t=60, b=35))
+                render_plotly(fig, width="stretch")
+            chart_caption("Policy-linked indicator trends over the selected time window.")
 
-    st.dataframe(policy[["Policy_Name", "Category", "Launch_Year", "Description"]], width="stretch", hide_index=True)
+    policy_table = policy[["Policy_Name", "Category", "Launch_Year", "Description"]]
+    st.dataframe(policy_table, width="stretch", hide_index=True)
 
 if st.session_state.focus == "human_development":
     st.subheader("Human Development")
+    page_data = load_page_datasets("human_development")
+    infant = page_data["infant"].copy()
+    literacy = page_data["literacy"].copy()
+    population = page_data["population"].copy()
+    poverty_reference = page_data["poverty_reference"].copy()
     literacy_long = parse_literacy_sheet(literacy)
     poverty_state = poverty.melt(id_vars="Year", var_name="State", value_name="Poverty")
     poverty_state["State"] = poverty_state["State"].map(normalize_state)
     poverty_state["Year"] = to_number(poverty_state["Year"])
     poverty_state["Poverty"] = to_number(poverty_state["Poverty"])
-    human_year = st.radio("Select year", [1991, 2001, 2011], index=0, horizontal=True)
+    human_year = st.slider("Select year", min_value=1991, max_value=2011, value=2011, step=10)
     human_rows = main[main["Year"] == human_year].copy()
-    if selected_state != "All India":
-        human_rows = human_rows[human_rows["State/UT"] == selected_state]
+    if page_filters["states"]:
+        human_rows = human_rows[human_rows["State/UT"].isin(page_filters["states"])]
     lit_year = literacy_long[["State", human_year]].rename(columns={human_year: "Literacy"})
     lit_year = lit_year.dropna(subset=["Literacy"])
-    if selected_state != "All India":
-        lit_year = lit_year[lit_year["State"] == selected_state]
+    if page_filters["states"]:
+        lit_year = lit_year[lit_year["State"].isin(page_filters["states"])]
     pov_year = poverty_state[poverty_state["Year"] == human_year]
     if pov_year.empty:
         poverty_fallback = poverty_reference.rename(columns={poverty_reference.columns[0]: "State"}).melt(
@@ -1345,15 +1596,15 @@ if st.session_state.focus == "human_development":
         poverty_fallback["Year"] = to_number(poverty_fallback["Year"])
         poverty_fallback["Poverty"] = to_number(poverty_fallback["Poverty"])
         pov_year = poverty_fallback[poverty_fallback["Year"] == human_year]
-    if selected_state != "All India":
-        pov_year = pov_year[pov_year["State"] == selected_state]
+    if page_filters["states"]:
+        pov_year = pov_year[pov_year["State"].isin(page_filters["states"])]
     elif "National Average" in pov_year["State"].values:
         pov_year = pov_year[pov_year["State"] == "National Average"]
     pop_year = population[["Region", human_year]] if human_year in population.columns else population[[population.columns[0], 2011]]
     pop_year = pop_year.rename(columns={pop_year.columns[0]: "State", human_year if human_year in pop_year.columns else 2011: "Population"})
     pop_year["State"] = pop_year["State"].map(normalize_state)
-    if selected_state != "All India":
-        pop_year = pop_year[pop_year["State"] == selected_state]
+    if page_filters["states"]:
+        pop_year = pop_year[pop_year["State"].isin(page_filters["states"])]
     imr_state = infant.rename(columns={infant.columns[0]: "State"}).copy()
     imr_state["State"] = imr_state["State"].map(normalize_state)
     imr_state = imr_state.rename(columns={c: int(c) if str(c).isdigit() else c for c in imr_state.columns})
@@ -1361,8 +1612,8 @@ if st.session_state.focus == "human_development":
     imr_long = imr_state.melt(id_vars="State", value_vars=imr_years, var_name="Year", value_name="IMR")
     imr_long["Year"] = to_number(imr_long["Year"])
     imr_long["IMR"] = to_number(imr_long["IMR"])
-    if selected_state != "All India":
-        imr_long = imr_long[imr_long["State"] == selected_state]
+    if page_filters["states"]:
+        imr_long = imr_long[imr_long["State"].isin(page_filters["states"])]
 
     h1, h2, h3, h4 = st.columns(4)
     with h1:
@@ -1380,11 +1631,23 @@ if st.session_state.focus == "human_development":
         lit_plot = literacy_long.melt(id_vars="State", var_name="Year", value_name="Literacy")
         lit_plot["Year"] = to_number(lit_plot["Year"])
         lit_plot = lit_plot.dropna(subset=["Literacy"])
-        fig = px.line(lit_plot, x="Year", y="Literacy", color="State", title="Literacy Across States")
-        render_plotly(fig, width="stretch")
+        if page_filters["states"]:
+            lit_plot = lit_plot[lit_plot["State"].isin(page_filters["states"])]
+        lit_plot = lit_plot[lit_plot["Year"].between(page_filters["year_range"][0], page_filters["year_range"][1])]
+        lit_plot = downsample_frame(lit_plot, 3000)
+        if lit_plot.empty:
+            show_no_data_message("No literacy data matches the selected filters.")
+        else:
+            fig = px.line(lit_plot, x="Year", y="Literacy", color="State", title="Literacy Across States")
+            render_plotly(fig, width="stretch")
+            chart_caption("Literacy trend lines for the selected states and year range.")
     with right:
-        fig = px.line(imr_long, x="Year", y="IMR", color="State", title="Infant Mortality Trend")
-        render_plotly(fig, width="stretch")
+        if imr_long.empty:
+            show_no_data_message("No infant mortality data matches the selected filters.")
+        else:
+            fig = px.line(imr_long, x="Year", y="IMR", color="State", title="Infant Mortality Trend")
+            render_plotly(fig, width="stretch")
+            chart_caption("Infant mortality trend lines for the selected states.")
 
     bottom_left, bottom_right = st.columns(2)
     with bottom_left:
@@ -1393,10 +1656,16 @@ if st.session_state.focus == "human_development":
         pop_long["Population"] = to_number(pop_long["Population"].replace("State not formed", pd.NA))
         pop_long = pop_long.dropna(subset=["Population"])
         pop_long["Region"] = pop_long["Region"].map(normalize_state)
-        if selected_state != "All India":
-            pop_long = pop_long[pop_long["Region"] == selected_state]
-        fig = px.line(pop_long[pop_long["Year"] >= 1951], x="Year", y="Population", color="Region", title="Population Growth Snapshot")
-        render_plotly(fig, width="stretch")
+        if page_filters["states"]:
+            pop_long = pop_long[pop_long["Region"].isin(page_filters["states"])]
+        pop_long = pop_long[pop_long["Year"].between(*page_filters["year_range"])]
+        pop_long = downsample_frame(pop_long, 3000)
+        if pop_long.empty:
+            show_no_data_message("No population data matches the selected filters.")
+        else:
+            fig = px.line(pop_long[pop_long["Year"] >= 1951], x="Year", y="Population", color="Region", title="Population Growth Snapshot")
+            render_plotly(fig, width="stretch")
+            chart_caption("Population growth across the selected state or states.")
     with bottom_right:
         lit_year_plot = lit_year.sort_values("Literacy", ascending=False).head(12)
         fig = px.bar(lit_year_plot, x="State", y="Literacy", title=f"Literacy Ranking in {human_year}")
@@ -1404,16 +1673,22 @@ if st.session_state.focus == "human_development":
 
 if st.session_state.focus == "state_compare":
     st.subheader("State Compare")
+    page_data = load_page_datasets("state_compare")
+    infant = page_data["infant"].copy()
+    literacy = page_data["literacy"].copy()
+    population = page_data["population"].copy()
+    poverty_reference = page_data["poverty_reference"].copy()
     compare_col1, compare_col2, compare_col3 = st.columns([1, 1, 1])
+    compare_state_options = page_filters["states"] or states
     with compare_col1:
         compare_state_1 = st.selectbox(
             "Pick first state/UT",
-            options=states,
-            index=states.index(selected_state) if selected_state in states else 0,
+            options=compare_state_options,
+            index=0,
             key="compare_state_1",
         )
     with compare_col2:
-        second_options = [state for state in states if state != compare_state_1] or states
+        second_options = [state for state in compare_state_options if state != compare_state_1] or compare_state_options
         compare_state_2 = st.selectbox(
             "Pick second state/UT",
             options=second_options,
@@ -1421,7 +1696,7 @@ if st.session_state.focus == "state_compare":
             key="compare_state_2",
         )
     with compare_col3:
-        compare_year = st.radio("Select year", [1991, 2001, 2011], index=0, horizontal=True)
+        compare_year = st.slider("Select year", min_value=1991, max_value=2011, value=2011, step=10)
 
     literacy_state = parse_literacy_sheet(literacy)
     infant_state = parse_infant_sheet(infant)
@@ -1617,11 +1892,24 @@ if st.session_state.focus == "state_compare":
 
 if st.session_state.focus == "covid_impact":
     st.subheader("COVID-19 Impact Analysis")
-    pre_year, post_year = 2019, 2021
+    pre_year = 2019
+    covid_years = (
+        analysis_panel.loc[pd.to_numeric(analysis_panel["COVID Deaths"], errors="coerce").fillna(0) > 0, "Year"]
+        .dropna()
+        .astype(int)
+        .unique()
+        .tolist()
+    )
+    post_year = max([year for year in covid_years if year >= 2020], default=2021)
+    # COVID Deaths is sourced from the main CS661 dataset so the impact view stays
+    # aligned with the project-wide development panel.
     covid_features = ["GSDP", "Per Capita Income", "Unemployment Rate", "Worker Participation Rate", "Poverty Rate", "HDI", "COVID Deaths"]
     covid_features = [col for col in covid_features if col in analysis_panel.columns]
     pre = analysis_panel[analysis_panel["Year"] == pre_year][["State"] + covid_features].copy()
     post = analysis_panel[analysis_panel["Year"] == post_year][["State"] + covid_features].copy()
+    if page_filters["states"]:
+        pre = pre[pre["State"].isin(page_filters["states"])]
+        post = post[post["State"].isin(page_filters["states"])]
     covid_compare = pre.merge(post, on="State", suffixes=(f" {pre_year}", f" {post_year}"))
     for col in covid_features:
         covid_compare[f"{col} Change"] = covid_compare[f"{col} {post_year}"] - covid_compare[f"{col} {pre_year}"]
@@ -1629,56 +1917,54 @@ if st.session_state.focus == "covid_impact":
         covid_compare[f"{col} Change %"] = (covid_compare[f"{col} Change"] / base) * 100
     if selected_state != "All India":
         covid_compare = covid_compare[covid_compare["State"] == selected_state]
-
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        metric_card("GSDP Change", fmt_value(safe_mean(covid_compare.get("GSDP Change %", pd.Series(dtype=float))), "{:.2f}%"))
-    with c2:
-        metric_card("PCI Change", fmt_value(safe_mean(covid_compare.get("Per Capita Income Change %", pd.Series(dtype=float))), "{:.2f}%"))
-    with c3:
-        metric_card("Unemployment Change", fmt_value(safe_mean(covid_compare.get("Unemployment Rate Change", pd.Series(dtype=float))), "{:.2f} pp"))
-    with c4:
-        metric_card("COVID Deaths", fmt_value(safe_mean(covid_compare.get("COVID Deaths 2021", pd.Series(dtype=float))), "{:,.0f}"))
-
-    left, right = st.columns(2)
-    with left:
-        if "GSDP Change %" in covid_compare.columns and not covid_compare.empty:
-            fig = px.bar(
-                covid_compare.sort_values("GSDP Change %").head(15),
-                x="GSDP Change %",
-                y="State",
-                orientation="h",
-                title="Largest GSDP Slowdowns or Recoveries, 2019-2021",
-                color="GSDP Change %",
-                color_continuous_scale="RdYlGn",
-            )
-            render_plotly(fig, width="stretch")
-    with right:
-        if {"Unemployment Rate Change", "COVID Deaths 2021"}.issubset(covid_compare.columns):
-            fig = px.scatter(
-                covid_compare,
-                x="COVID Deaths 2021",
-                y="Unemployment Rate Change",
-                size="GSDP 2021" if "GSDP 2021" in covid_compare.columns else None,
-                color="GSDP Change %" if "GSDP Change %" in covid_compare.columns else None,
-                hover_name="State",
-                title="Pandemic Burden vs Unemployment Shift",
-                color_continuous_scale="RdYlGn",
-            )
-            render_plotly(fig, width="stretch")
-
-    trend_cols = [col for col in ["GSDP", "Unemployment Rate", "Per Capita Income", "Poverty Rate"] if col in analysis_panel.columns]
-    covid_trend = analysis_panel[analysis_panel["Year"].between(2016, 2023)][["State", "Year"] + trend_cols].copy()
-    if selected_state != "All India":
-        covid_trend = covid_trend[covid_trend["State"] == selected_state]
+    if covid_compare.empty:
+        show_no_data_message("No COVID impact data matches the selected filters.")
     else:
-        covid_trend = covid_trend.groupby("Year", as_index=False)[trend_cols].mean()
-        covid_trend["State"] = "India Average"
-    covid_long = covid_trend.melt(id_vars=["State", "Year"], value_vars=trend_cols, var_name="Indicator", value_name="Value")
-    fig = px.line(covid_long, x="Year", y="Value", color="Indicator", line_dash="State", title="Pre/Post COVID Indicator Trends")
-    fig.add_vline(x=2020, line_dash="dash", line_color="red")
-    render_plotly(fig, width="stretch")
-    st.dataframe(covid_compare, width="stretch", hide_index=True)
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            metric_card("GSDP Change", fmt_value(safe_mean(covid_compare.get("GSDP Change %", pd.Series(dtype=float))), "{:.2f}%"))
+        with c2:
+            metric_card("PCI Change", fmt_value(safe_mean(covid_compare.get("Per Capita Income Change %", pd.Series(dtype=float))), "{:.2f}%"))
+        with c3:
+            metric_card("Unemployment Change", fmt_value(safe_mean(covid_compare.get("Unemployment Rate Change", pd.Series(dtype=float))), "{:.2f} pp"))
+        with c4:
+            metric_card("COVID Deaths", fmt_value(safe_mean(covid_compare.get(f"COVID Deaths {post_year}", pd.Series(dtype=float))), "{:,.0f}"))
+
+        left, right = st.columns(2)
+        with left:
+            if "GSDP Change %" in covid_compare.columns and not covid_compare.empty:
+                fig = px.bar(
+                    covid_compare.sort_values("GSDP Change %").head(15),
+                    x="GSDP Change %",
+                    y="State",
+                    orientation="h",
+                    title=f"Largest GSDP Slowdowns or Recoveries, {pre_year}-{post_year}",
+                    color="GSDP Change %",
+                    color_continuous_scale="RdYlGn",
+                )
+            render_plotly(fig, width="stretch")
+            chart_caption("States with the largest GSDP change between the pre- and post-COVID years.")
+        with right:
+            covid_death_col = f"COVID Deaths {post_year}"
+            if {"Unemployment Rate Change", covid_death_col}.issubset(covid_compare.columns):
+                covid_plot_data = covid_compare.dropna(subset=[covid_death_col, "Unemployment Rate Change"])
+                if not covid_plot_data.empty:
+                    covid_plot_data = prepare_size_column(covid_plot_data, f"GSDP {post_year}")
+                    color_col = "GSDP Change %" if "GSDP Change %" in covid_plot_data.columns else None
+                    fig = px.scatter(
+                        covid_plot_data,
+                        x=covid_death_col,
+                        y="Unemployment Rate Change",
+                        size="Bubble Size",
+                        color=color_col,
+                        hover_name="State",
+                        title="Pandemic Burden vs Unemployment Shift",
+                        color_continuous_scale="RdYlGn",
+                    )
+                    render_plotly(fig, width="stretch")
+                    chart_caption("COVID deaths compared with unemployment change for the selected states.")
+                else:
+                    st.info("No valid data for pandemic burden vs unemployment analysis.")
 
 if st.session_state.focus == "regional_patterns":
     st.subheader("Regional Development Pattern Analysis")
@@ -1699,11 +1985,15 @@ if st.session_state.focus == "regional_patterns":
             "MPI",
         ]
         snap = analysis_panel[analysis_panel["Year"] == selected_year].copy()
+        if page_filters["states"]:
+            snap = snap[snap["State"].isin(page_filters["states"])]
         if snap.empty:
             snap = analysis_panel[analysis_panel["Year"] == latest_available_year(analysis_panel, selected_year, "HDI")].copy()
+            if page_filters["states"]:
+                snap = snap[snap["State"].isin(page_filters["states"])]
         matrix, used_features = feature_matrix(snap, cluster_features)
         if len(matrix) < 5 or len(used_features) < 2:
-            st.warning("Not enough feature coverage for clustering in this year.")
+            show_no_data_message("No data matches the selected filters for clustering.")
         else:
             k = st.slider("Number of clusters", min_value=2, max_value=min(6, len(matrix) - 1), value=3)
             X_scaled = make_pipeline(SimpleImputer(strategy="median"), StandardScaler()).fit_transform(matrix[used_features])
@@ -1729,6 +2019,7 @@ if st.session_state.focus == "regional_patterns":
             with left:
                 fig = px.scatter(cluster_df, x="PC1", y="PC2", color="Cluster", hover_name="State", title="PCA Scatter with K-Means Clusters")
                 render_plotly(fig, width="stretch")
+                chart_caption("PCA projection of state development patterns with K-Means clusters.")
             with right:
                 cluster_sizes = cluster_df.groupby("Cluster", as_index=False).size().rename(columns={"size": "States"})
                 fig = px.bar(
@@ -1740,19 +2031,23 @@ if st.session_state.focus == "regional_patterns":
                 )
                 fig.update_layout(template="plotly_white")
                 render_plotly(fig, width="stretch")
+                chart_caption("Count of states in each cluster.")
                 profile = cluster_df.groupby("Cluster", as_index=False)[used_features[:5]].mean()
                 profile_long = profile.melt(id_vars="Cluster", var_name="Indicator", value_name="Average")
                 fig = px.bar(profile_long, x="Indicator", y="Average", color="Cluster", barmode="group", title="Cluster Average Profile")
                 fig.update_layout(template="plotly_white")
                 render_plotly(fig, width="stretch")
+                chart_caption("Average feature profile for each cluster.")
+            parallel_df = downsample_frame(cluster_df, 1500)
             fig = px.parallel_coordinates(
-                cluster_df,
+                parallel_df,
                 dimensions=used_features[:6],
-                color=cluster_df["Cluster ID"],
+                color=parallel_df["Cluster ID"],
                 title="Cluster Profiles Across Key Indicators",
                 color_continuous_scale="Turbo",
             )
             render_plotly(fig, width="stretch")
+            chart_caption("Parallel coordinates view of the selected cluster features.")
             st.dataframe(cluster_df.sort_values("Cluster"), width="stretch", hide_index=True)
 
 if st.session_state.focus == "forecasting":
@@ -1777,11 +2072,11 @@ if st.session_state.focus == "forecasting":
         if forecast_indicator in gdp_forecast_map:
             source_col = gdp_forecast_map[forecast_indicator]
             if forecast_state == "All India":
-                series_df = gdp.groupby("Year", as_index=False)[source_col].mean().rename(columns={source_col: forecast_indicator})
+                series_df = main[main["State/UT"].notna()].groupby("Year", as_index=False)[source_col].mean().rename(columns={source_col: forecast_indicator})
                 series_label = "India Average"
             else:
                 series_df = (
-                    gdp[gdp["State/UT"] == forecast_state][["Year", source_col]]
+                    main[main["State/UT"] == forecast_state][["Year", source_col]]
                     .copy()
                     .rename(columns={source_col: forecast_indicator})
                 )
@@ -1797,18 +2092,6 @@ if st.session_state.focus == "forecasting":
             st.warning("Not enough yearly data for an 80/20 chronological train-test forecast.")
         else:
             history, test_out, forecast, metrics = result
-            f1, f2, f3, f4, f5 = st.columns(5)
-            with f1:
-                metric_card("Selected Model", metrics["Model"])
-            with f2:
-                metric_card("Train/Test Rows", f"{metrics['Train Rows']} / {metrics['Test Rows']}")
-            with f3:
-                metric_card("MAE", fmt_value(metrics["MAE"], "{:,.2f}"))
-            with f4:
-                metric_card("RMSE", fmt_value(metrics["RMSE"], "{:,.2f}"))
-            with f5:
-                validation_text = "N/A" if pd.isna(metrics["Validation MAE"]) else fmt_value(metrics["Validation MAE"], "{:,.2f}")
-                metric_card("Forecast Validation", validation_text, f"{metrics['Validation Rows']} used, {metrics['Flagged Rows']} flagged")
 
             fig = go.Figure()
             validation_window = forecast[forecast["Year"].between(2024, 2026)]
@@ -1864,6 +2147,7 @@ if st.session_state.focus == "forecasting":
             fig.update_xaxes(gridcolor="rgba(31,41,55,0.14)", zerolinecolor="rgba(31,41,55,0.18)", color="#111827")
             fig.update_yaxes(gridcolor="rgba(31,41,55,0.14)", zerolinecolor="rgba(31,41,55,0.18)", color="#111827")
             render_plotly(fig, width="stretch")
+            chart_caption(f"Forecast path for {forecast_indicator} in {series_label}.")
             st.caption("Zero placeholders and incomplete 2024 actuals are ignored. Only non-excluded real-world values are used for validation.")
             with st.expander("Model validation scores"):
                 st.dataframe(metrics["Model Scores"].sort_values("RMSE"), width="stretch", hide_index=True)
@@ -1895,6 +2179,9 @@ if st.session_state.focus == "classification":
             "Working Population",
         ]
         labelled = add_development_labels(analysis_panel)
+        if page_filters["states"]:
+            labelled = labelled[labelled["State"].isin(page_filters["states"])]
+        labelled = labelled[labelled["Year"].between(*page_filters["year_range"])]
         labelled = labelled[labelled["Development Category"] != "Unknown"].copy()
         matrix, used_features = feature_matrix(labelled, class_features)
         model_df = matrix.merge(
@@ -1903,7 +2190,7 @@ if st.session_state.focus == "classification":
             how="left",
         ).dropna(subset=["Development Category"])
         if len(model_df) < 20 or len(used_features) < 3:
-            st.warning("Not enough labelled rows for development classification.")
+            show_no_data_message("No labelled data matches the selected filters for classification.")
         else:
             X = model_df[used_features]
             y = model_df["Development Category"]
@@ -1934,6 +2221,7 @@ if st.session_state.focus == "classification":
                 fig = px.bar(importance.head(12), x="Importance", y="Feature", orientation="h", title="Random Forest Feature Importance")
                 fig.update_layout(yaxis={"categoryorder": "total ascending"})
                 render_plotly(fig, width="stretch")
+                chart_caption("Most important features used by the classifier.")
             with right:
                 report_df = pd.DataFrame(report).T.reset_index().rename(columns={"index": "Class"})
                 st.dataframe(report_df, width="stretch", hide_index=True)
